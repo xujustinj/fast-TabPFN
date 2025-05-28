@@ -16,6 +16,9 @@ if TYPE_CHECKING:
 
 # TODO: Merge functionality from BarDistribution and FullSupportBarDistribution
 class BarDistribution(nn.Module):
+    if TYPE_CHECKING:
+        borders: torch.Tensor
+
     def __init__(self, borders: torch.Tensor, *, ignore_nan_targets: bool = True):
         """Loss for a distribution over bars. The bars are defined by the borders.
         The loss is the negative log density of the distribution. The density is defined
@@ -72,9 +75,9 @@ class BarDistribution(nn.Module):
             # bring new borders to the same dim as logits up to the last dim
             ys = ys.repeat(logits.shape[:-1] + (1,))
         else:
-            assert (
-                ys.shape[:-1] == logits.shape[:-1]
-            ), f"ys.shape: {ys.shape} logits.shape: {logits.shape}"
+            assert ys.shape[:-1] == logits.shape[:-1], (
+                f"ys.shape: {ys.shape} logits.shape: {logits.shape}"
+            )
         probs = torch.softmax(logits, dim=-1)
         buckets_of_ys = self.map_to_bucket_idx(ys).clamp(0, self.num_bars - 1)
 
@@ -147,9 +150,9 @@ class BarDistribution(nn.Module):
 
         return probs.log()
 
+    @override
     def __setstate__(self, state: dict) -> None:
-        if "bucket_widths" in state:
-            del state["bucket_widths"]
+        state.pop("bucket_widths", None)
         super().__setstate__(state)
         self.__dict__.setdefault("append_mean_pred", False)
 
@@ -190,9 +193,9 @@ class BarDistribution(nn.Module):
         ignore_loss_mask = self.ignore_init(y)
         target_sample = self.map_to_bucket_idx(y)
         assert (target_sample >= 0).all()
-        assert (
-            target_sample < self.num_bars
-        ).all(), f"y {y} not in support set for borders (min_y, max_y) {self.borders}"
+        assert (target_sample < self.num_bars).all(), (
+            f"y {y} not in support set for borders (min_y, max_y) {self.borders}"
+        )
 
         last_dim = logits.shape[-1]
         assert last_dim == self.num_bars, f"{last_dim} v {self.num_bars}"
@@ -462,9 +465,9 @@ class FullSupportBarDistribution(BarDistribution):
 
     def assert_support(self, *, allow_zero_bucket_left: bool = False) -> None:
         if allow_zero_bucket_left:
-            assert (
-                self.bucket_widths[-1] > 0
-            ), f"Half Normal weight must be > 0 (got -1:{self.bucket_widths[-1]})."
+            assert self.bucket_widths[-1] > 0, (
+                f"Half Normal weight must be > 0 (got -1:{self.bucket_widths[-1]})."
+            )
             # This fixes the distribution if the half normal at zero is width zero
             if self.bucket_widths[0] == 0:
                 self.borders[0] = self.borders[0] - 1
@@ -505,13 +508,13 @@ class FullSupportBarDistribution(BarDistribution):
         target_sample = self.map_to_bucket_idx(y)  # shape: T x B (same as y)
         target_sample.clamp_(0, self.num_bars - 1)
 
-        assert (
-            logits.shape[-1] == self.num_bars
-        ), f"{logits.shape[-1]} vs {self.num_bars}"
+        assert logits.shape[-1] == self.num_bars, (
+            f"{logits.shape[-1]} vs {self.num_bars}"
+        )
         assert (target_sample >= 0).all()
-        assert (
-            target_sample < self.num_bars
-        ).all(), f"y {y} not in support set for borders (min_y, max_y) {self.borders}"
+        assert (target_sample < self.num_bars).all(), (
+            f"y {y} not in support set for borders (min_y, max_y) {self.borders}"
+        )
         last_dim = logits.shape[-1]
         assert last_dim == self.num_bars, f"{last_dim} vs {self.num_bars}"
         # ignore all position with nan values
@@ -544,9 +547,9 @@ class FullSupportBarDistribution(BarDistribution):
         nll_loss = -log_probs
 
         if mean_prediction_logits is not None:  # TO BE REMOVED AFTER BO PAPER IS DONE
-            assert (
-                not ignore_loss_mask.any()
-            ), "Ignoring examples is not implemented with mean pred."
+            assert not ignore_loss_mask.any(), (
+                "Ignoring examples is not implemented with mean pred."
+            )
             if not torch.is_grad_enabled():
                 pass
             nll_loss = torch.cat(
@@ -783,16 +786,16 @@ def get_bucket_limits(
             If set, the bucket limits are widened by this factor.
             This allows to have a slightly larger range than the actual data.
     """
-    assert (ys is None) != (
-        full_range is None
-    ), "Either full_range or ys must be passed."
+    assert (ys is None) != (full_range is None), (
+        "Either full_range or ys must be passed."
+    )
 
     if ys is not None:
         ys = ys.flatten()
         ys = ys[~torch.isnan(ys)]
-        assert (
-            len(ys) > num_outputs
-        ), f"Number of ys :{len(ys)} must be larger than num_outputs: {num_outputs}"
+        assert len(ys) > num_outputs, (
+            f"Number of ys :{len(ys)} must be larger than num_outputs: {num_outputs}"
+        )
         if len(ys) % num_outputs:
             ys = ys[: -(len(ys) % num_outputs)]
         ys_per_bucket = len(ys) // num_outputs

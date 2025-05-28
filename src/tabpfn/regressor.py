@@ -391,6 +391,15 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         self.n_jobs = n_jobs
         self.inference_config = inference_config
 
+        # eager loading
+        static_seed, _ = infer_random_state(self.random_state)
+        self.model_, self.config_, self.bardist_ = initialize_tabpfn_model(
+            model_path=self.model_path,
+            which="regressor",
+            fit_mode=self.fit_mode,
+            static_seed=static_seed,
+        )
+
     # TODO: We can remove this from scikit-learn lower bound of 1.6
     def _more_tags(self) -> dict[str, Any]:
         return {
@@ -415,14 +424,6 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
             self
         """
         static_seed, rng = infer_random_state(self.random_state)
-
-        # Load the model and config
-        self.model_, self.config_, self.bardist_ = initialize_tabpfn_model(
-            model_path=self.model_path,
-            which="regressor",
-            fit_mode=self.fit_mode,
-            static_seed=static_seed,
-        )
 
         # Determine device and precision
         self.device_ = infer_device_and_type(self.device)
@@ -508,7 +509,7 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
             polynomial_features=self.interface_config_.POLYNOMIAL_FEATURES,
             max_index=len(X),
             preprocessor_configs=typing.cast(
-                Sequence[PreprocessorConfig],
+                "Sequence[PreprocessorConfig]",
                 preprocess_transforms
                 if preprocess_transforms is not None
                 else default_regressor_preprocessor_configs(),
@@ -636,9 +637,9 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         if quantiles is None:
             quantiles = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         else:
-            assert all(
-                (0 <= q <= 1) and (isinstance(q, float)) for q in quantiles
-            ), "All quantiles must be between 0 and 1 and floats."
+            assert all((0 <= q <= 1) and (isinstance(q, float)) for q in quantiles), (
+                "All quantiles must be between 0 and 1 and floats."
+            )
         if output_type not in self._USABLE_OUTPUT_TYPES:
             raise ValueError(f"Invalid output type: {output_type}")
 
@@ -722,11 +723,13 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         if output_type in ["full", "main"]:
             # Create a dictionary of outputs with proper typing via TypedDict
             # Get individual outputs with proper typing
-            mean_out = typing.cast(np.ndarray, logit_to_output(output_type="mean"))
-            median_out = typing.cast(np.ndarray, logit_to_output(output_type="median"))
-            mode_out = typing.cast(np.ndarray, logit_to_output(output_type="mode"))
+            mean_out = typing.cast("np.ndarray", logit_to_output(output_type="mean"))
+            median_out = typing.cast(
+                "np.ndarray", logit_to_output(output_type="median")
+            )
+            mode_out = typing.cast("np.ndarray", logit_to_output(output_type="mode"))
             quantiles_out = typing.cast(
-                list[np.ndarray],
+                "list[np.ndarray]",
                 logit_to_output(output_type="quantiles"),
             )
 
