@@ -31,18 +31,13 @@ CUDA optimization.
 > No GPU? Use our free hosted inference via [TabPFN Client](https://github.com/PriorLabs/tabpfn-client).
 
 ### Installation
-Official installation (pip)
-```bash
-pip install tabpfn
-```
-OR installation from source
-```bash
-pip install "tabpfn @ git+https://github.com/PriorLabs/TabPFN.git"
+Installation from source
+```sh
+pip install "tabpfn @ git+https://github.com/xujustinj/fast-TabPFN.git"
 ```
 OR local development installation
-```bash
-
-git clone https://github.com/PriorLabs/TabPFN.git
+```sh
+git clone git@github.com:xujustinj/fast-TabPFN.git
 pip install -e "TabPFN[dev]"
 ```
 
