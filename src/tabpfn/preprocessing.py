@@ -562,11 +562,8 @@ def fit_preprocessing_one(
     """
     static_seed, _ = infer_random_state(random_state)
     if config.subsample_ix is not None:
-        X_train = X_train[config.subsample_ix].copy()
-        y_train = y_train[config.subsample_ix].copy()
-    else:
-        X_train = X_train.copy()
-        y_train = y_train.copy()
+        X_train = X_train[config.subsample_ix]
+        y_train = y_train[config.subsample_ix]
 
     preprocessor = config.to_pipeline(random_state=static_seed)
     res = preprocessor.fit_transform(X_train, cat_ix)

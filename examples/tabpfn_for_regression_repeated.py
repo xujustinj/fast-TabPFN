@@ -72,7 +72,7 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--trials", type=int, default=3)
+    parser.add_argument("--trials", type=int, default=5)
     parser.add_argument("--name", type=str, default="")
     args = parser.parse_args()
 
