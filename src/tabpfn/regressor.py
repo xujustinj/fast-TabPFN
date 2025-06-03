@@ -51,6 +51,7 @@ from tabpfn.preprocessing import (
     RegressorEnsembleConfig,
     default_regressor_preprocessor_configs,
 )
+from tabpfn.profiling import timer
 from tabpfn.utils import (
     _fix_dtypes,
     _get_embeddings,
@@ -392,13 +393,17 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         self.inference_config = inference_config
 
         # eager loading
-        static_seed, _ = infer_random_state(self.random_state)
-        self.model_, self.config_, self.bardist_ = initialize_tabpfn_model(
-            model_path=self.model_path,
-            which="regressor",
-            fit_mode=self.fit_mode,
-            static_seed=static_seed,
-        )
+        self.static_seed: int | None = None
+
+    def initialize_tabpfn_model(self, static_seed: int) -> None:
+        if self.static_seed is None or self.static_seed != static_seed:
+            self.model_, self.config_, self.bardist_ = initialize_tabpfn_model(
+                model_path=self.model_path,
+                which="regressor",
+                fit_mode=self.fit_mode,
+                static_seed=static_seed,
+            )
+            self.static_seed = static_seed
 
     # TODO: We can remove this from scikit-learn lower bound of 1.6
     def _more_tags(self) -> dict[str, Any]:
@@ -424,6 +429,9 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
             self
         """
         static_seed, rng = infer_random_state(self.random_state)
+
+        with timer("initialize_tabpfn_model"):
+            self.initialize_tabpfn_model(static_seed)
 
         # Determine device and precision
         self.device_ = infer_device_and_type(self.device)
