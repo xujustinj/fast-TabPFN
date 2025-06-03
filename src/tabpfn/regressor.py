@@ -377,11 +377,18 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         self.softmax_temperature = softmax_temperature
         self.average_before_softmax = average_before_softmax
         self.model_path = model_path
+
+        # Determine device and precision
         self.device = device
-        self.ignore_pretraining_limits = ignore_pretraining_limits
+        self.device_ = infer_device_and_type(self.device)
         self.inference_precision: torch.dtype | Literal["autocast", "auto"] = (
             inference_precision
         )
+        (self.use_autocast_, self.forced_inference_dtype_, self.byte_size_) = (
+            determine_precision(self.inference_precision, self.device_)
+        )
+
+        self.ignore_pretraining_limits = ignore_pretraining_limits
         self.fit_mode: Literal["low_memory", "fit_preprocessors", "fit_with_cache"] = (
             fit_mode
         )
@@ -390,10 +397,22 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         )
         self.random_state = random_state
         self.n_jobs = n_jobs
+
+        # Build the interface_config
         self.inference_config = inference_config
+        self.interface_config_ = ModelInterfaceConfig.from_user_input(
+            inference_config=self.inference_config,
+        )
+        outlier_removal_std = self.interface_config_.OUTLIER_REMOVAL_STD
+        if outlier_removal_std == "auto":
+            outlier_removal_std = (
+                self.interface_config_._REGRESSION_DEFAULT_OUTLIER_REMOVAL_STD
+            )
+        self.outlier_removal_std_ = outlier_removal_std
 
         # eager loading
         self.static_seed: int | None = None
+        self.preprocessor_ = _get_ordinal_encoder()
 
     def initialize_tabpfn_model(self, static_seed: int) -> None:
         if self.static_seed is None or self.static_seed != static_seed:
@@ -404,6 +423,13 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
                 static_seed=static_seed,
             )
             self.static_seed = static_seed
+
+            update_encoder_outlier_params(
+                model=self.model_,
+                remove_outliers_std=self.outlier_removal_std_,
+                seed=static_seed,
+                inplace=True,
+            )
 
     # TODO: We can remove this from scikit-learn lower bound of 1.6
     def _more_tags(self) -> dict[str, Any]:
@@ -433,29 +459,6 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         with timer("initialize_tabpfn_model"):
             self.initialize_tabpfn_model(static_seed)
 
-        # Determine device and precision
-        self.device_ = infer_device_and_type(self.device)
-        (self.use_autocast_, self.forced_inference_dtype_, byte_size) = (
-            determine_precision(self.inference_precision, self.device_)
-        )
-
-        # Build the interface_config
-        self.interface_config_ = ModelInterfaceConfig.from_user_input(
-            inference_config=self.inference_config,
-        )
-
-        outlier_removal_std = self.interface_config_.OUTLIER_REMOVAL_STD
-        if outlier_removal_std == "auto":
-            outlier_removal_std = (
-                self.interface_config_._REGRESSION_DEFAULT_OUTLIER_REMOVAL_STD
-            )
-        update_encoder_outlier_params(
-            model=self.model_,
-            remove_outliers_std=outlier_removal_std,
-            seed=static_seed,
-            inplace=True,
-        )
-
         X, y, feature_names_in, n_features_in = validate_Xy_fit(
             X,
             y,
@@ -479,9 +482,9 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         X = _fix_dtypes(X, cat_indices=self.categorical_features_indices)
 
         # Ensure categories are ordinally encoded
-        ord_encoder = _get_ordinal_encoder()
-        X = _process_text_na_dataframe(X, ord_encoder=ord_encoder, fit_encoder=True)  # type: ignore
-        self.preprocessor_ = ord_encoder
+        X = _process_text_na_dataframe(
+            X, ord_encoder=self.preprocessor_, fit_encoder=True
+        )  # type: ignore
 
         self.inferred_categorical_indices_ = infer_categorical_features(
             X=X,
@@ -528,14 +531,15 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         assert len(ensemble_configs) == self.n_estimators
 
         # Standardize y
-        mean = np.mean(y)
-        std = np.std(y)
-        self.y_train_std_ = std.item() + 1e-20
-        self.y_train_mean_ = mean.item()
-        y = (y - self.y_train_mean_) / self.y_train_std_
-        self.renormalized_criterion_ = FullSupportBarDistribution(
-            self.bardist_.borders * self.y_train_std_ + self.y_train_mean_,
-        ).float()
+        with timer("standardize_y"):
+            mean = np.mean(y)
+            std = np.std(y)
+            self.y_train_std_ = std.item() + 1e-20
+            self.y_train_mean_ = mean.item()
+            y = (y - self.y_train_mean_) / self.y_train_std_
+            self.renormalized_criterion_ = FullSupportBarDistribution(
+                self.bardist_.borders * self.y_train_std_ + self.y_train_mean_,
+            ).float()
 
         # Create the inference engine
         self.executor_ = create_inference_engine(
@@ -548,7 +552,7 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
             device_=self.device_,
             rng=rng,
             n_jobs=self.n_jobs,
-            byte_size=byte_size,
+            byte_size=self.byte_size_,
             forced_inference_dtype_=self.forced_inference_dtype_,
             memory_saving_mode=self.memory_saving_mode,
             use_autocast_=self.use_autocast_,
