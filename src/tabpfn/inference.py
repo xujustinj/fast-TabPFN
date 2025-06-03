@@ -10,6 +10,7 @@ from collections.abc import Iterator, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
+import warnings
 from typing_extensions import override
 
 import numpy as np
@@ -54,22 +55,25 @@ class InferenceEngine(ABC):
 
     save_peak_mem: bool | Literal["auto"] | float | int
     dtype_byte_size: int
+    device: torch.device
 
     @abstractmethod
     def iter_outputs(
         self,
         X: np.ndarray,
         *,
-        device: torch.device,
+        device: torch.device | None,
         autocast: bool,
-    ) -> Iterator[tuple[torch.Tensor, EnsembleConfig]]:
+    ) -> Iterator[tuple[torch.Tensor | dict, EnsembleConfig]]:
         """Iterate over the outputs of the model.
 
         One for each ensemble configuration that was used to initialize the executor.
 
         Args:
             X: The input data to make predictions on.
-            device: The device to run the model on.
+            device: The device to run the model on. If None, the model is run on
+                    self.device. If not None, the model is moved to the device and
+                    then moved back after inference.
             autocast: Whether to use torch.autocast during inference.
         """
         ...
@@ -92,6 +96,12 @@ class InferenceEngineOnDemand(InferenceEngine):
     n_workers: int
     model: PerFeatureTransformer
     force_inference_dtype: torch.dtype | None
+    device: torch.device
+
+    def __post_init__(self):
+        self.model = self.model.to(self.device)
+        if self.force_inference_dtype is not None:
+            self.model = self.model.type(self.force_inference_dtype)
 
     @classmethod
     def prepare(
@@ -101,6 +111,7 @@ class InferenceEngineOnDemand(InferenceEngine):
         *,
         cat_ix: list[int],
         model: PerFeatureTransformer,
+        device: torch.device,
         ensemble_configs: Sequence[EnsembleConfig],
         rng: np.random.Generator,
         n_workers: int,
@@ -115,6 +126,7 @@ class InferenceEngineOnDemand(InferenceEngine):
             y_train: The training target.
             cat_ix: The categorical indices.
             model: The model to use.
+            device: The device to run the model on.
             ensemble_configs: The ensemble configurations to use.
             rng: The random number generator.
             n_workers: The number of workers to use.
@@ -130,11 +142,12 @@ class InferenceEngineOnDemand(InferenceEngine):
             ensemble_configs=ensemble_configs,
             cat_ix=cat_ix,
             model=model,
-            static_seed=static_seed,
+            static_seed=int(static_seed),
             n_workers=n_workers,
             dtype_byte_size=dtype_byte_size,
             force_inference_dtype=force_inference_dtype,
             save_peak_mem=save_peak_mem,
+            device=device,
         )
 
     @override
@@ -142,10 +155,12 @@ class InferenceEngineOnDemand(InferenceEngine):
         self,
         X: np.ndarray,
         *,
-        device: torch.device,
+        device: torch.device | None,
         autocast: bool,
         only_return_standard_out: bool = True,
     ) -> Iterator[tuple[torch.Tensor | dict, EnsembleConfig]]:
+        device = self.device if device is None else device
+
         rng = np.random.default_rng(self.static_seed)
         itr = fit_preprocessing(
             configs=self.ensemble_configs,
@@ -158,8 +173,6 @@ class InferenceEngineOnDemand(InferenceEngine):
         )
 
         self.model = self.model.to(device)
-        if self.force_inference_dtype is not None:
-            self.model = self.model.type(self.force_inference_dtype)
 
         for config, preprocessor, X_train, y_train, cat_ix in itr:
             X_train = torch.as_tensor(X_train, dtype=torch.float32, device=device)  # noqa: PLW2901
@@ -201,7 +214,7 @@ class InferenceEngineOnDemand(InferenceEngine):
 
             yield output, config
 
-        self.model = self.model.cpu()
+        self.model = self.model.to(self.device)
 
 
 @dataclass
@@ -225,6 +238,11 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
     model: PerFeatureTransformer
     force_inference_dtype: torch.dtype | None
 
+    def __post_init__(self):
+        self.model = self.model.to(self.device)
+        if self.force_inference_dtype is not None:
+            self.model = self.model.type(self.force_inference_dtype)
+
     @classmethod
     def prepare(
         cls,
@@ -233,6 +251,7 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
         *,
         cat_ix: list[int],
         model: PerFeatureTransformer,
+        device: torch.device,
         ensemble_configs: Sequence[EnsembleConfig],
         n_workers: int,
         rng: np.random.Generator,
@@ -247,13 +266,13 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
             y_train: The training target.
             cat_ix: The categorical indices.
             model: The model to use.
+            device: The device to run the model on.
             ensemble_configs: The ensemble configurations to use.
             n_workers: The number of workers to use.
             rng: The random number generator.
             dtype_byte_size: The byte size of the dtype.
             force_inference_dtype: The dtype to force inference to.
             save_peak_mem: Whether to save peak memory usage.
-
         Returns:
             The prepared inference engine.
         """
@@ -277,6 +296,7 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
             dtype_byte_size=dtype_byte_size,
             force_inference_dtype=force_inference_dtype,
             save_peak_mem=save_peak_mem,
+            device=device,
         )
 
     @override
@@ -284,13 +304,15 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
         self,
         X: np.ndarray,
         *,
-        device: torch.device,
+        device: torch.device | None,
         autocast: bool,
         only_return_standard_out: bool = True,
     ) -> Iterator[tuple[torch.Tensor | dict, EnsembleConfig]]:
+        device = self.device if device is None else device
         self.model = self.model.to(device)
         if self.force_inference_dtype is not None:
             self.model = self.model.type(self.force_inference_dtype)
+
         for preprocessor, X_train, y_train, config, cat_ix in zip(
             self.preprocessors,
             self.X_trains,
@@ -340,7 +362,7 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
 
             yield output, config
 
-        self.model = self.model.cpu()
+        self.model = self.model.to(self.device)
 
 
 @dataclass
@@ -359,6 +381,17 @@ class InferenceEngineCacheKV(InferenceEngine):
     models: list[PerFeatureTransformer]
     n_train_samples: list[int]
     force_inference_dtype: torch.dtype | None
+
+    def __post_init__(self):
+        if self.device != torch.device("cpu"):
+            warnings.warn(
+                "InferenceEngineCacheKV uses a lot of memory; keeping all of the models in GPU might be a bad idea."
+            )
+        self.models = [model.to(self.device) for model in self.models]
+        if self.force_inference_dtype is not None:
+            self.models = [
+                model.type(self.force_inference_dtype) for model in self.models
+            ]
 
     @classmethod
     def prepare(  # noqa: PLR0913
@@ -450,6 +483,7 @@ class InferenceEngineCacheKV(InferenceEngine):
             dtype_byte_size=dtype_byte_size,
             force_inference_dtype=force_inference_dtype,
             save_peak_mem=save_peak_mem,
+            device=device,
         )
 
     @override
@@ -457,10 +491,12 @@ class InferenceEngineCacheKV(InferenceEngine):
         self,
         X: np.ndarray,
         *,
-        device: torch.device,
+        device: torch.device | None,
         autocast: bool,
         only_return_standard_out: bool = True,
     ) -> Iterator[tuple[torch.Tensor | dict, EnsembleConfig]]:
+        device = self.device if device is None else device
+
         for preprocessor, model, config, cat_ix, X_train_len in zip(
             self.preprocessors,
             self.models,
@@ -483,7 +519,7 @@ class InferenceEngineCacheKV(InferenceEngine):
                 n_train_samples=X_train_len,
             )
 
-            model = model.to(device)  # noqa: PLW2901
+            model = model.to(device)
             style = None
 
             if self.force_inference_dtype is not None:
@@ -503,7 +539,7 @@ class InferenceEngineCacheKV(InferenceEngine):
 
             # TODO(eddiebergman): This is not really what we want.
             # We'd rather just say unload from GPU, we already have it available on CPU.
-            model = model.cpu()  # noqa: PLW2901
+            model = model.to(self.device)
 
             output = output if isinstance(output, dict) else output.squeeze(1)
 

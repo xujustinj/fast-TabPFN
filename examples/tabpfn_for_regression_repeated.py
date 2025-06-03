@@ -22,7 +22,7 @@ X, y = load_diabetes(return_X_y=True)
 def main():
     reg = TabPFNRegressor()
 
-    for i in range(3):
+    for i in range(5):
         yield "=" * 80
         yield f"FIT {i=}"
 
