@@ -32,6 +32,7 @@ from tabpfn.model.preprocessing import (
     SequentialFeatureTransformer,
     ShuffleFeaturesStep,
 )
+from tabpfn.profiling import timer
 from tabpfn.utils import infer_random_state
 
 if TYPE_CHECKING:
@@ -627,41 +628,42 @@ def fit_preprocessing(
         preprocessing pipeline, the transformed training data, the transformed target,
         and the indices of categorical features.
     """
-    _, rng = infer_random_state(random_state)
+    with timer("fit_preprocessing"):
+        _, rng = infer_random_state(random_state)
 
-    # TODO: It seems like we really don't benefit from much more than 1,2,4 workers,
-    # even for the largest datasets from AutoMLBenchmark. Even then, the benefit is
-    # marginal. For now, we stick with single worker.
-    #
-    # The parameters worth tuning are `batch_size` and `n_jobs`
-    # * `n_jobs` - how many workers to spawn.
-    # * `batch_size` - how many tasks to send to a worker at once.
-    #
-    # For small datasets (for which this model is built for), it's quite hard to tune
-    # for increased performance and staying at 1 worker seems ideal. However for larger
-    # datasets, at the limit of what we support, having `len(configs) // 2` workers
-    # seemed good, with a `batch_size` of 2.
-    # NOTE: By setting `n_jobs` = 1, it effectively doesn't spawn anything and runs
-    # in-process
-    if SUPPORTS_RETURN_AS:
-        return_as = PARALLEL_MODE_TO_RETURN_AS[parallel_mode]
-        executor = joblib.Parallel(
-            n_jobs=1,
-            return_as=return_as,
-            batch_size="auto",  # type: ignore
-        )
-    else:
-        executor = joblib.Parallel(
-            n_jobs=1,
-            batch_size="auto",  # type: ignore
-        )
-    func = partial(fit_preprocessing_one, cat_ix=cat_ix)
-    worker_func = joblib.delayed(func)
+        # TODO: It seems like we really don't benefit from much more than 1,2,4 workers,
+        # even for the largest datasets from AutoMLBenchmark. Even then, the benefit is
+        # marginal. For now, we stick with single worker.
+        #
+        # The parameters worth tuning are `batch_size` and `n_jobs`
+        # * `n_jobs` - how many workers to spawn.
+        # * `batch_size` - how many tasks to send to a worker at once.
+        #
+        # For small datasets (for which this model is built for), it's quite hard to tune
+        # for increased performance and staying at 1 worker seems ideal. However for larger
+        # datasets, at the limit of what we support, having `len(configs) // 2` workers
+        # seemed good, with a `batch_size` of 2.
+        # NOTE: By setting `n_jobs` = 1, it effectively doesn't spawn anything and runs
+        # in-process
+        if SUPPORTS_RETURN_AS:
+            return_as = PARALLEL_MODE_TO_RETURN_AS[parallel_mode]
+            executor = joblib.Parallel(
+                n_jobs=1,
+                return_as=return_as,
+                batch_size="auto",  # type: ignore
+            )
+        else:
+            executor = joblib.Parallel(
+                n_jobs=1,
+                batch_size="auto",  # type: ignore
+            )
+        func = partial(fit_preprocessing_one, cat_ix=cat_ix)
+        worker_func = joblib.delayed(func)
 
-    seeds = rng.integers(0, np.iinfo(np.int32).max, len(configs))
-    yield from executor(  # type: ignore
-        [
-            worker_func(config, X_train, y_train, seed)
-            for config, seed in zip(configs, seeds)
-        ],
-    )
+        seeds = rng.integers(0, np.iinfo(np.int32).max, len(configs))
+        yield from executor(  # type: ignore
+            [
+                worker_func(config, X_train, y_train, seed)
+                for config, seed in zip(configs, seeds)
+            ],
+        )

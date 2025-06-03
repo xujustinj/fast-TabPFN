@@ -18,6 +18,7 @@ import torch
 
 from tabpfn.model.memory import MemoryUsageEstimator
 from tabpfn.preprocessing import fit_preprocessing
+from tabpfn.profiling import timer
 
 if TYPE_CHECKING:
     from tabpfn.model.preprocessing import SequentialFeatureTransformer
@@ -104,6 +105,7 @@ class InferenceEngineOnDemand(InferenceEngine):
             self.model = self.model.type(self.force_inference_dtype)
 
     @classmethod
+    @torch.inference_mode()
     def prepare(
         cls,
         X_train: np.ndarray,
@@ -150,6 +152,7 @@ class InferenceEngineOnDemand(InferenceEngine):
             device=device,
         )
 
+    @torch.inference_mode()
     @override
     def iter_outputs(
         self,
@@ -175,13 +178,15 @@ class InferenceEngineOnDemand(InferenceEngine):
         self.model = self.model.to(device)
 
         for config, preprocessor, X_train, y_train, cat_ix in itr:
-            X_train = torch.as_tensor(X_train, dtype=torch.float32, device=device)  # noqa: PLW2901
+            with timer("preprocessing"):
+                X_test = preprocessor.transform(X).X
 
-            X_test = preprocessor.transform(X).X
-            X_test = torch.as_tensor(X_test, dtype=torch.float32, device=device)
+            with timer("numpy_to_torch"):
+                X_train = torch.as_tensor(X_train, dtype=torch.float32, device=device)  # noqa: PLW2901
+                X_test = torch.as_tensor(X_test, dtype=torch.float32, device=device)
+                y_train = torch.as_tensor(y_train, dtype=torch.float32, device=device)  # type: ignore  # noqa: PLW2901
 
             X_full = torch.cat([X_train, X_test], dim=0).unsqueeze(1)
-            y_train = torch.as_tensor(y_train, dtype=torch.float32, device=device)  # type: ignore  # noqa: PLW2901
 
             MemoryUsageEstimator.reset_peak_memory_if_required(
                 save_peak_mem=self.save_peak_mem,
@@ -193,16 +198,14 @@ class InferenceEngineOnDemand(InferenceEngine):
                 safety_factor=1.2,  # TODO(Arjun): make customizable
             )
 
-            if self.force_inference_dtype is not None:
-                X_full = X_full.type(self.force_inference_dtype)
-                y_train = y_train.type(self.force_inference_dtype)  # type: ignore  # noqa: PLW2901
+            with timer("type_casting"):
+                if self.force_inference_dtype is not None:
+                    X_full = X_full.type(self.force_inference_dtype)
+                    y_train = y_train.type(self.force_inference_dtype)  # type: ignore  # noqa: PLW2901
 
             style = None
 
-            with (
-                torch.autocast(device.type, enabled=autocast),
-                torch.inference_mode(),
-            ):
+            with torch.autocast(device.type, enabled=autocast):
                 output = self.model(
                     *(style, X_full, y_train),
                     only_return_standard_out=only_return_standard_out,
@@ -244,6 +247,7 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
             self.model = self.model.type(self.force_inference_dtype)
 
     @classmethod
+    @torch.inference_mode()
     def prepare(
         cls,
         X_train: np.ndarray,
@@ -299,6 +303,7 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
             device=device,
         )
 
+    @torch.inference_mode()
     @override
     def iter_outputs(
         self,
@@ -320,20 +325,23 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
             self.ensemble_configs,
             self.cat_ixs,
         ):
-            X_train = torch.as_tensor(X_train, dtype=torch.float32, device=device)  # noqa: PLW2901
+            with timer("preprocessing"):
+                X_test = preprocessor.transform(X).X
 
-            X_test = preprocessor.transform(X).X
-            X_test = torch.as_tensor(X_test, dtype=torch.float32, device=device)
+            with timer("numpy_to_torch"):
+                X_train = torch.as_tensor(X_train, dtype=torch.float32, device=device)  # noqa: PLW2901
+                X_test = torch.as_tensor(X_test, dtype=torch.float32, device=device)
+                y_train = torch.as_tensor(y_train, dtype=torch.float32, device=device)  # noqa: PLW2901
 
             X_full = torch.cat([X_train, X_test], dim=0).unsqueeze(1)
-            y_train = torch.as_tensor(y_train, dtype=torch.float32, device=device)  # noqa: PLW2901
 
-            # Handle type casting
-            with contextlib.suppress(Exception):  # Avoid overflow error
-                X_full = X_full.float()
-            if self.force_inference_dtype is not None:
-                X_full = X_full.type(self.force_inference_dtype)
-                y_train = y_train.type(self.force_inference_dtype)  # type: ignore # noqa: PLW2901
+            with timer("type_casting"):
+                # Handle type casting
+                with contextlib.suppress(Exception):  # Avoid overflow error
+                    X_full = X_full.float()
+                if self.force_inference_dtype is not None:
+                    X_full = X_full.type(self.force_inference_dtype)
+                    y_train = y_train.type(self.force_inference_dtype)  # type: ignore # noqa: PLW2901
 
             MemoryUsageEstimator.reset_peak_memory_if_required(
                 save_peak_mem=self.save_peak_mem,
@@ -345,14 +353,11 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
                 safety_factor=1.2,  # TODO(Arjun): make customizable
             )
 
-            style = None
-
-            with (
-                torch.autocast(device.type, enabled=autocast),
-                torch.inference_mode(),
-            ):
+            with torch.autocast(device.type, enabled=autocast):
                 output = self.model(
-                    *(style, X_full, y_train),
+                    None,
+                    X_full,
+                    y_train,
                     only_return_standard_out=only_return_standard_out,
                     categorical_inds=cat_ix,
                     single_eval_pos=len(y_train),
@@ -394,6 +399,7 @@ class InferenceEngineCacheKV(InferenceEngine):
             ]
 
     @classmethod
+    @torch.inference_mode()
     def prepare(  # noqa: PLR0913
         cls,
         X_train: np.ndarray,
@@ -443,36 +449,37 @@ class InferenceEngineCacheKV(InferenceEngine):
         cat_ixs: list[list[int]] = []
         n_train_samples: list[int] = []
 
-        for config, preprocessor, X, y, preprocessor_cat_ix in itr:
-            cat_ixs.append(preprocessor_cat_ix)
-            preprocessors.append(preprocessor)
-            correct_order_configs.append(config)
-            n_train_samples.append(len(y))
+        with torch.inference_mode():
+            for config, preprocessor, X, y, preprocessor_cat_ix in itr:
+                cat_ixs.append(preprocessor_cat_ix)
+                preprocessors.append(preprocessor)
+                correct_order_configs.append(config)
+                n_train_samples.append(len(y))
 
-            ens_model = deepcopy(model)
-            ens_model = ens_model.to(device)
-            X = torch.as_tensor(X, dtype=torch.float32, device=device).unsqueeze(1)  # noqa: PLW2901
-            y = torch.as_tensor(y, dtype=torch.float32, device=device)  # noqa: PLW2901
+                ens_model = deepcopy(model)
+                ens_model = ens_model.to(device)
+                with timer("numpy_to_torch"):
+                    X = torch.as_tensor(
+                        X, dtype=torch.float32, device=device
+                    ).unsqueeze(1)  # noqa: PLW2901
+                    y = torch.as_tensor(y, dtype=torch.float32, device=device)  # noqa: PLW2901
 
-            # We do not reset the peak memory for cache_kv mode
-            # because the entire data has to be passed through the model
-            # at once to generate the KV cache
+                # We do not reset the peak memory for cache_kv mode
+                # because the entire data has to be passed through the model
+                # at once to generate the KV cache
 
-            with (
-                torch.autocast(device.type, enabled=autocast),
-                torch.inference_mode(),
-            ):
-                ens_model.forward(
-                    *(None, X, y),
-                    only_return_standard_out=only_return_standard_out,
-                    categorical_inds=preprocessor_cat_ix,
-                    single_eval_pos=len(X),
-                )
+                with torch.autocast(device.type, enabled=autocast):
+                    ens_model.forward(
+                        *(None, X, y),
+                        only_return_standard_out=only_return_standard_out,
+                        categorical_inds=preprocessor_cat_ix,
+                        single_eval_pos=len(X),
+                    )
 
-            if device.type != "cpu":
-                ens_model = ens_model.cpu()
+                if device.type != "cpu":
+                    ens_model = ens_model.cpu()
 
-            models.append(ens_model)
+                models.append(ens_model)
 
         return InferenceEngineCacheKV(
             preprocessors=preprocessors,
@@ -486,6 +493,7 @@ class InferenceEngineCacheKV(InferenceEngine):
             device=device,
         )
 
+    @torch.inference_mode()
     @override
     def iter_outputs(
         self,
@@ -504,9 +512,12 @@ class InferenceEngineCacheKV(InferenceEngine):
             self.cat_ixs,
             self.n_train_samples,
         ):
-            X_test = preprocessor.transform(X).X
-            X_test = torch.as_tensor(X_test, dtype=torch.float32, device=device)
-            X_test = X_test.unsqueeze(1)
+            with timer("preprocessing"):
+                X_test = preprocessor.transform(X).X
+
+            with timer("numpy_to_torch"):
+                X_test = torch.as_tensor(X_test, dtype=torch.float32, device=device)
+                X_test = X_test.unsqueeze(1)
 
             MemoryUsageEstimator.reset_peak_memory_if_required(
                 save_peak_mem=self.save_peak_mem,
@@ -520,18 +531,16 @@ class InferenceEngineCacheKV(InferenceEngine):
             )
 
             model = model.to(device)
-            style = None
 
-            if self.force_inference_dtype is not None:
-                model = model.type(self.force_inference_dtype)  # noqa: PLW2901
-                X_test = X_test.type(self.force_inference_dtype)
+            with timer("type_casting"):
+                if self.force_inference_dtype is not None:
+                    X_test = X_test.type(self.force_inference_dtype)
 
-            with (
-                torch.autocast(device.type, enabled=autocast),
-                torch.inference_mode(),
-            ):
+            with torch.autocast(device.type, enabled=autocast):
                 output = model(
-                    *(style, X_test, None),
+                    None,
+                    X_test,
+                    None,
                     only_return_standard_out=only_return_standard_out,
                     categorical_inds=cat_ix,
                     single_eval_pos=None,
