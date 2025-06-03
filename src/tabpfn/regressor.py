@@ -51,6 +51,7 @@ from tabpfn.preprocessing import (
     RegressorEnsembleConfig,
     default_regressor_preprocessor_configs,
 )
+from tabpfn.profiling import timer
 from tabpfn.utils import (
     _fix_dtypes,
     _get_embeddings,
@@ -417,12 +418,13 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         static_seed, rng = infer_random_state(self.random_state)
 
         # Load the model and config
-        self.model_, self.config_, self.bardist_ = initialize_tabpfn_model(
-            model_path=self.model_path,
-            which="regressor",
-            fit_mode=self.fit_mode,
-            static_seed=static_seed,
-        )
+        with timer("initialize_tabpfn_model"):
+            self.model_, self.config_, self.bardist_ = initialize_tabpfn_model(
+                model_path=self.model_path,
+                which="regressor",
+                fit_mode=self.fit_mode,
+                static_seed=static_seed,
+            )
 
         # Determine device and precision
         self.device_ = infer_device_and_type(self.device)
