@@ -1,6 +1,4 @@
-"""This is a copy of the KDITransformer class from kditransform,
-modified to work with PyTorch.
-"""
+"""This is a copy of the KDITransformer class from kditransform."""
 
 from __future__ import annotations
 
@@ -12,11 +10,6 @@ from typing_extensions import Self
 import numpy as np
 import scipy.interpolate as spip
 import scipy.stats as spst
-from kditransform.ksum import (
-    betas_for_order,
-    h_Gauss_to_K,
-    ksum_numba,
-)
 from scipy import integrate
 from sklearn.base import (
     BaseEstimator,
@@ -29,6 +22,12 @@ from sklearn.utils.validation import (
     validate_data,  # type: ignore
 )
 
+from .ksum import (
+    betas_for_order,
+    h_Gauss_to_K,
+    ksum_numba,
+)
+
 BOUNDS_THRESHOLD = 1e-7
 
 
@@ -39,8 +38,8 @@ class KDITransformer(TransformerMixin, BaseEstimator):
     or transforms them by scaling and translating them into a [0, 1] range,
     or does a (hyperparameter-tunable) interpolation of the two.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     alpha: float > 0, 'scott', 'silverman', or None
         Bandwidth factor parameter for kernel density estimator.
 
@@ -92,8 +91,8 @@ class KDITransformer(TransformerMixin, BaseEstimator):
         If True, does not compute and store integrals at landmarks, and instead
         performs integration during calls to transform.
 
-    Attributes
-    ----------
+    Attributes:
+    -----------
     n_quantiles_ : int
         The actual number of quantiles used to discretize the cumulative
         distribution function.
@@ -146,7 +145,8 @@ class KDITransformer(TransformerMixin, BaseEstimator):
             if subsample is not None:
                 warnings.warn(
                     "Subsampling is not needed and not recommended"
-                    "for polyexp kernel since it is fast already."
+                    "for polyexp kernel since it is fast already.",
+                    stacklevel=2,
                 )
             if polyexp_eval not in ("uniform", "train", "auto"):
                 raise ValueError(f"Unexpected polyexp_eval: {polyexp_eval}")
@@ -200,12 +200,12 @@ class KDITransformer(TransformerMixin, BaseEstimator):
                 subsample_idx = random_state.choice(
                     n_samples, size=self.subsample_, replace=False
                 )
-                col = col.take(subsample_idx, mode="clip")
+                col = col.take(subsample_idx, mode="clip")  # noqa: PLW2901
                 assert isinstance(col, np.ndarray)
             if np.var(col) == 0:
                 # Causes gaussian_kde -> _compute_covariance -> linalg.cholesky error.
                 # We instead duplicate QuantileTransformer's behavior here, which is
-                # quantiles = np.nanpercentile(col, self.references_ * 100)
+                # quantiles = np.nanpercentile(col, self.references_ * 100)  # noqa: E501, ERA001
                 # But krstn.eu/np.nanpercentile()-there-has-to-be-a-faster-way/
                 # So instead we hard-code what nanpercentile does in this case:
                 quantiles = col[0] * np.ones_like(self.references_)
@@ -216,7 +216,7 @@ class KDITransformer(TransformerMixin, BaseEstimator):
                 xmax = np.max(col)
                 # This reduces the total complexity from O(subsample_ ** 2) to
                 # O(n_quantiles_ * subsample_ + subsample_ * log(subsample_)):
-                col = np.quantile(col, self.references_)
+                col = np.quantile(col, self.references_)  # noqa: PLW2901
                 assert isinstance(col, np.ndarray)
                 (N,) = col.shape  # type: ignore
                 T = np.zeros(N)
@@ -248,10 +248,10 @@ class KDITransformer(TransformerMixin, BaseEstimator):
         # Make sure that quantiles are monotonically increasing
         self.quantiles_ = np.maximum.accumulate(self.quantiles_, axis=0)
 
-    def _polyexp_dense_fit(
+    def _polyexp_dense_fit(  # noqa: C901, PLR0912
         self,
         X: np.ndarray,
-        alphas: Sequence[float | Literal["scott", "silverman"]],
+        alphas: Sequence[float | np.floating | Literal["scott", "silverman"]],
         random_state: np.random.RandomState,
     ):
         """Compute percentiles for dense matrices, using polyexp kernel.
@@ -307,16 +307,16 @@ class KDITransformer(TransformerMixin, BaseEstimator):
                 subsample_idx = random_state.choice(
                     n_samples, size=self.subsample_, replace=False
                 )
-                col = col.take(subsample_idx, mode="clip")
+                col = col.take(subsample_idx, mode="clip")  # noqa: PLW2901
             if np.var(col) == 0:
                 quantiles = col[0] * np.ones_like(self.references_)
             else:
                 xmin = np.min(col)
                 xmax = np.max(col)
                 if alpha == "scott":
-                    alpha = float(np.power(n_samples, (-1.0 / (1 + 4))))
+                    alpha = float(np.power(n_samples, (-1.0 / (1 + 4))))  # noqa: PLW2901
                 elif alpha == "silverman":
-                    alpha = float(np.power(n_samples * (1 + 2.0) / 4.0, -1.0 / (1 + 4)))
+                    alpha = float(np.power(n_samples * (1 + 2.0) / 4.0, -1.0 / (1 + 4)))  # noqa: PLW2901
                 elif isinstance(alpha, float):
                     pass
                 else:
@@ -326,7 +326,7 @@ class KDITransformer(TransformerMixin, BaseEstimator):
                 # Bandwidth needs to be shrunk for polyexp kernel:
                 h = h_Gauss_to_K(alpha * np.std(col), betas)
                 col_mean = np.mean(col)
-                col -= col_mean
+                col -= col_mean  # noqa: PLW2901
                 col_sort = np.sort(col)
                 if self.polyexp_eval == "uniform":
                     col_eval = np.linspace(np.min(col), np.max(col), n_eval)
@@ -360,7 +360,7 @@ class KDITransformer(TransformerMixin, BaseEstimator):
                 density_out /= n_samples * h
                 density_out[np.isnan(density_out)] = 1e-300
                 density_out[~np.isfinite(density_out)] = 1e-300
-                col += col_mean
+                col += col_mean  # noqa: PLW2901
                 col_sort += col_mean
                 col_eval += col_mean
                 T = integrate.cumulative_trapezoid(density_out, col_eval, initial=0)
@@ -382,19 +382,19 @@ class KDITransformer(TransformerMixin, BaseEstimator):
         # Make sure that quantiles are monotonically increasing
         self.quantiles_ = np.maximum.accumulate(self.quantiles_, axis=0)
 
-    def fit(self, X: np.ndarray, y: Any | None = None) -> Self:
+    def fit(self, X: np.ndarray, y: Any | None = None) -> Self:  # noqa: ARG002
         """Compute the kernel-smoothed quantiles used for transforming.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         X : array-like of shape (n_samples, n_features)
             The data used to scale along the features axis.
 
         y : None
             Ignored.
 
-        Returns
-        -------
+        Returns:
+        --------
         self : object
            Fitted transformer.
         """
@@ -539,8 +539,8 @@ class KDITransformer(TransformerMixin, BaseEstimator):
     def _transform(self, X: np.ndarray, *, inverse: bool = False) -> np.ndarray:
         """Forward and inverse transform.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         X : ndarray of shape (n_samples, n_features)
             The data used to scale along the features axis.
 
@@ -548,8 +548,8 @@ class KDITransformer(TransformerMixin, BaseEstimator):
             If False, apply forward transform. If True, apply
             inverse transform.
 
-        Returns
-        -------
+        Returns:
+        --------
         X : ndarray of shape (n_samples, n_features)
             Projected data.
         """
@@ -594,13 +594,13 @@ class KDITransformer(TransformerMixin, BaseEstimator):
     def transform(self, X: np.ndarray) -> np.ndarray:
         """Feature-wise transformation of the data.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         X : {array-like, sparse matrix} of shape (n_samples, n_features)
             The data used to scale along the features axis.
 
-        Returns
-        -------
+        Returns:
+        --------
         Xt : ndarray of shape (n_samples, n_features
             The projected data.
         """
@@ -615,13 +615,13 @@ class KDITransformer(TransformerMixin, BaseEstimator):
     def inverse_transform(self, X: np.ndarray) -> np.ndarray:
         """Back-projection to the original space.
 
-        Parameters
-        ----------
+        Parameters:
+        -----------
         X : array-like of shape (n_samples, n_features)
             The data used to scale along the features axis.
 
-        Returns
-        -------
+        Returns:
+        --------
         Xt : ndarray of (n_samples, n_features)
             The projected data.
         """
