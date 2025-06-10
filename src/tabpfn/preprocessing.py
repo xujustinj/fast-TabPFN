@@ -13,8 +13,8 @@ from itertools import chain, product, repeat
 from typing import TYPE_CHECKING, Literal, TypeVar
 from typing_extensions import override
 
+import joblib
 import numpy as np
-from sklearn.utils.validation import joblib
 
 from tabpfn.constants import (
     CLASS_SHUFFLE_OVERESTIMATE_FACTOR,
@@ -595,7 +595,7 @@ def fit_preprocessing(
     *,
     random_state: int | np.random.Generator | None,
     cat_ix: list[int],
-    n_workers: int,  # noqa: ARG001
+    n_workers: int = -1,
     parallel_mode: Literal["block", "as-ready", "in-order"],
 ) -> Iterator[
     tuple[
@@ -648,13 +648,13 @@ def fit_preprocessing(
         if SUPPORTS_RETURN_AS:
             return_as = PARALLEL_MODE_TO_RETURN_AS[parallel_mode]
             executor = joblib.Parallel(
-                n_jobs=1,
+                n_jobs=n_workers,
                 return_as=return_as,
                 batch_size="auto",  # type: ignore
             )
         else:
             executor = joblib.Parallel(
-                n_jobs=1,
+                n_jobs=n_workers,
                 batch_size="auto",  # type: ignore
             )
         func = partial(fit_preprocessing_one, cat_ix=cat_ix)
