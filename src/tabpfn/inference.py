@@ -5,12 +5,12 @@
 from __future__ import annotations
 
 import contextlib
+import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
-import warnings
 from typing_extensions import override
 
 import numpy as np

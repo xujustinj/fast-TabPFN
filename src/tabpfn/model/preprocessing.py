@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import warnings
 from abc import abstractmethod
@@ -14,7 +15,6 @@ from typing_extensions import Self, override
 import numpy as np
 import scipy
 import torch
-from pandas.core.common import contextlib
 from scipy.stats import shapiro
 from sklearn.compose import ColumnTransformer, make_column_selector
 from sklearn.decomposition import TruncatedSVD
@@ -30,19 +30,14 @@ from sklearn.preprocessing import (
     RobustScaler,
     StandardScaler,
 )
+from sklearn.utils.validation import validate_data  # type: ignore
 
 from tabpfn.utils import infer_random_state
 
 if TYPE_CHECKING:
     from sklearn.base import TransformerMixin
 
-
-try:
-    from kditransform import KDITransformer
-
-    # This import fails on some systems, due to problems with numba
-except ImportError:
-    KDITransformer = PowerTransformer  # fallback to avoid error
+from .kdi import KDITransformer
 
 
 class KDITransformerWithNaN(KDITransformer):
@@ -50,9 +45,11 @@ class KDITransformerWithNaN(KDITransformer):
     mean values and then fills the NaN values with NaNs after the transformation.
     """
 
+    @override
     def _more_tags(self) -> dict:
         return {"allow_nan": True}
 
+    @override
     def fit(self, X: torch.Tensor | np.ndarray, y: Any | None = None) -> Self:
         if isinstance(X, torch.Tensor):
             X = X.cpu().numpy()
@@ -60,6 +57,7 @@ class KDITransformerWithNaN(KDITransformer):
         X = np.nan_to_num(X, nan=np.nanmean(X, axis=0))
         return super().fit(X, y)  # type: ignore
 
+    @override
     def transform(self, X: torch.Tensor | np.ndarray) -> np.ndarray:
         # if tensor convert to numpy
         if isinstance(X, torch.Tensor):
@@ -72,6 +70,7 @@ class KDITransformerWithNaN(KDITransformer):
         imputation = np.nanmean(X, axis=0)
         imputation = np.nan_to_num(imputation, nan=0)
         X = np.nan_to_num(X, nan=imputation)
+        assert isinstance(X, np.ndarray)
 
         # Apply the transformation
         X = super().transform(X)
@@ -79,7 +78,7 @@ class KDITransformerWithNaN(KDITransformer):
         # Reintroduce NaN values based on the current dataset's mask
         X[nan_mask] = np.nan
 
-        return X  # type: ignore
+        return X
 
 
 class AdaptiveQuantileTransformer(QuantileTransformer):
@@ -92,17 +91,26 @@ class AdaptiveQuantileTransformer(QuantileTransformer):
     based on total samples and then subsample.
     """
 
+    copy: bool
+
     def __init__(self, *, n_quantiles: int = 1000, **kwargs: Any) -> None:
         # Store the user's desired n_quantiles to use as an upper bound
         self._user_n_quantiles = n_quantiles
         # Initialize parent with this, but it will be adapted in fit
         super().__init__(n_quantiles=n_quantiles, **kwargs)
 
-    def fit(
-        self, X: np.ndarray, y: np.ndarray | None = None
-    ) -> AdaptiveQuantileTransformer:
-        X = self._validate_data(
-            X, copy=self.copy, estimator=self, dtype=float, force_all_finite="allow-nan"
+    @override
+    def fit(  # type: ignore
+        self,
+        X: np.ndarray,
+        y: np.ndarray | None = None,
+    ) -> Self:
+        X = validate_data(
+            X,
+            copy=self.copy,
+            estimator=self,
+            dtype=float,
+            force_all_finite="allow-nan",
         )
         n_samples = X.shape[0]
 
@@ -115,18 +123,20 @@ class AdaptiveQuantileTransformer(QuantileTransformer):
         # and self.n_quantiles will reflect the value used for the fit.
         self.n_quantiles = effective_n_quantiles
 
-        return super().fit(X, y)
+        return super().fit(X, y)  # type: ignore
 
     # For completeness and scikit-learn compatibility, allow getting params
     # to show the original user setting if desired, though self.n_quantiles
     # will show the fitted effective value.
-    def get_params(self, *, deep: bool = True) -> dict:
+    @override
+    def get_params(self, deep: bool = True) -> dict:
         params = super().get_params(deep)
         # Report the original user_n_quantiles if it's in params
         if "_user_n_quantiles" in self.__dict__:  # Check if it was set
             params["n_quantiles"] = self._user_n_quantiles
         return params
 
+    @override
     def set_params(self, **params: Any) -> AdaptiveQuantileTransformer:
         if "n_quantiles" in params:
             self._user_n_quantiles = params["n_quantiles"]
@@ -244,14 +254,16 @@ class SafePowerTransformer(PowerTransformer):
 
         return transformed_X
 
-    def fit(self, X: np.ndarray, y: Any | None = None) -> Self:
+    @override
+    def fit(self, X: np.ndarray, y: Any | None = None) -> Self:  # type: ignore
         super().fit(X, y)
 
         # Check and revert features as necessary
         self._find_features_to_revert_because_of_failure(super().transform(X))  # type: ignore
         return self
 
-    def transform(self, X: np.ndarray) -> np.ndarray:
+    @override
+    def transform(self, X: np.ndarray) -> np.ndarray:  # type: ignore
         transformed_X = super().transform(X)
         return self._revert_failed_features(transformed_X, X)  # type: ignore
 
@@ -323,7 +335,7 @@ def make_box_cox_safe(input_transformer: TransformerMixin | Pipeline) -> Pipelin
     """
     return Pipeline(
         steps=[
-            ("mm", MinMaxScaler(feature_range=(0.1, 1), clip=True)),
+            ("mm", MinMaxScaler(feature_range=(0.1, 1), clip=True)),  # type: ignore
             ("box_cox", input_transformer),
         ],
     )
@@ -462,9 +474,9 @@ class SequentialFeatureTransformer(UserList):
             X: 2d array of shape (n_samples, n_features)
             categorical_features: list of indices of categorical feature.
         """
-        assert (
-            len(self) > 0
-        ), "The SequentialFeatureTransformer must have at least one step."
+        assert len(self) > 0, (
+            "The SequentialFeatureTransformer must have at least one step."
+        )
         self.fit_transform(X, categorical_features)
         return self
 
@@ -474,9 +486,9 @@ class SequentialFeatureTransformer(UserList):
         Args:
             X: 2d array of shape (n_samples, n_features).
         """
-        assert (
-            len(self) > 0
-        ), "The SequentialFeatureTransformer must have at least one step."
+        assert len(self) > 0, (
+            "The SequentialFeatureTransformer must have at least one step."
+        )
         assert self.categorical_features_ is not None, (
             "The SequentialFeatureTransformer must be fit before it"
             " can be used to transform."
@@ -591,8 +603,12 @@ class ShuffleFeaturesStep(FeaturePreprocessingTransformerStep):
         self.index_permutation_: list[int] | None = None
 
     @override
-    def _fit(self, X: np.ndarray, categorical_features: list[int]) -> list[int]:
-        static_seed, rng = infer_random_state(self.random_state)
+    def _fit(
+        self,
+        X: np.ndarray,
+        categorical_features: list[int],
+    ) -> list[int]:
+        _, rng = infer_random_state(self.random_state)
         if self.shuffle_method == "rotate":
             index_permutation = np.roll(
                 np.arange(X.shape[1]),
@@ -616,9 +632,9 @@ class ShuffleFeaturesStep(FeaturePreprocessingTransformerStep):
     @override
     def _transform(self, X: np.ndarray, *, is_test: bool = False) -> np.ndarray:
         assert self.index_permutation_ is not None, "You must call fit first"
-        assert (
-            len(self.index_permutation_) == X.shape[1]
-        ), "The number of features must not change after fit"
+        assert len(self.index_permutation_) == X.shape[1], (
+            "The number of features must not change after fit"
+        )
         return X[:, self.index_permutation_]
 
 
@@ -1137,7 +1153,8 @@ class EncodeCategoricalFeaturesStep(FeaturePreprocessingTransformerStep):
             f"Unknown categorical transform {self.categorical_transform_name}",
         )
 
-    def _fit(
+    @override
+    def _fit(  # type: ignore
         self,
         X: np.ndarray,
         categorical_features: list[int],
@@ -1164,6 +1181,7 @@ class EncodeCategoricalFeaturesStep(FeaturePreprocessingTransformerStep):
 
         elif self.categorical_transform_name == "onehot":
             Xt = ct.fit_transform(X)
+            assert isinstance(Xt, np.ndarray)
             if Xt.size >= 1_000_000:
                 ct = None
             else:
@@ -1211,6 +1229,7 @@ class EncodeCategoricalFeaturesStep(FeaturePreprocessingTransformerStep):
 
         elif self.categorical_transform_name == "onehot":
             Xt = ct.fit_transform(X)
+            assert isinstance(Xt, np.ndarray)
             if Xt.size >= 1_000_000:
                 ct = None
                 Xt = X
@@ -1242,6 +1261,7 @@ class EncodeCategoricalFeaturesStep(FeaturePreprocessingTransformerStep):
             return X
 
         transformed = self.categorical_transformer_.transform(X)
+        assert isinstance(transformed, np.ndarray)
         if self.categorical_transform_name.endswith("_shuffled"):
             for col, mapping in self.random_mappings_.items():
                 not_nan_mask = ~np.isnan(transformed[:, col])  # type: ignore
@@ -1293,6 +1313,8 @@ class NanHandlingPolynomialFeaturesStep(FeaturePreprocessingTransformerStep):
             replace=True,
         )
         self.poly_factor_2_idx = np.ones_like(self.poly_factor_1_idx) * -1
+        assert isinstance(self.poly_factor_1_idx, np.ndarray)
+        assert isinstance(self.poly_factor_2_idx, np.ndarray)
         for i in range(len(self.poly_factor_1_idx)):
             while self.poly_factor_2_idx[i] == -1:
                 poly_factor_1_ = self.poly_factor_1_idx[i]
