@@ -7,7 +7,7 @@ from numba import njit
 from scipy.special import factorial
 
 
-def norm_const_K(betas: np.ndarray) -> float:
+def norm_const_K(betas: np.ndarray) -> np.floating:
     factorial_terms = np.array(
         [betas[k - 1] * factorial(k - 1) for k in range(1, len(betas) + 1)]
     )
@@ -19,7 +19,7 @@ def betas_for_order(order: int) -> np.ndarray:
     return unnorm_betas / norm_const_K(unnorm_betas)
 
 
-def roughness_K(betas: np.ndarray):
+def roughness_K(betas: np.ndarray) -> np.floating:
     beta_use = betas / norm_const_K(betas)
     betakj = np.outer(beta_use, beta_use)
     n = len(betas)
@@ -27,7 +27,7 @@ def roughness_K(betas: np.ndarray):
     return np.sum(betakj / (2**kpj) * factorial(kpj))
 
 
-def var_K(betas: np.ndarray) -> float:
+def var_K(betas: np.ndarray) -> np.floating:
     beta_use = betas / norm_const_K(betas)
     factorial_terms = np.array(
         [beta_use[k - 1] * factorial(k + 1) for k in range(1, len(betas) + 1)]
@@ -35,9 +35,44 @@ def var_K(betas: np.ndarray) -> float:
     return 2 * np.sum(factorial_terms)
 
 
-def h_Gauss_to_K(h: float | np.floating, betas: np.ndarray) -> float:
+def h_Gauss_to_K(h: float | np.floating, betas: np.ndarray) -> np.floating:
     """Converts bandwidth of Gaussian kernel to that of poly-exp kernel."""
     return h * (roughness_K(betas) / (var_K(betas) ** 2) * 2 * np.sqrt(np.pi)) ** 0.2
+
+
+def norm_const_K_fast(betas: np.ndarray) -> np.floating:
+    (N,) = betas.shape
+    return 2.0 * np.sum(betas * factorial(np.arange(N)))
+
+
+def betas_for_order_fast(order: int) -> np.ndarray:
+    N = order + 1
+    return (1.0 / (2.0 * N)) / factorial(np.arange(N))
+
+
+def roughness_K_fast(betas: np.ndarray) -> np.floating:
+    # betas should already be normalized
+    (N,) = betas.shape
+    betakj = np.outer(betas, betas)
+    powers = np.arange(N)
+    kpj = np.add.outer(powers, powers)
+    return np.sum(betakj / (2**kpj) * factorial(kpj))
+
+
+def var_K_fast(betas: np.ndarray) -> np.floating:
+    # betas should already be normalized
+    (N,) = betas.shape
+    return 2.0 * np.sum(betas * factorial(np.arange(2, N + 2)))
+
+
+def h_Gauss_to_K_factor_fast(betas: np.ndarray) -> np.floating:
+    return (
+        roughness_K_fast(betas) / (var_K_fast(betas) ** 2) * 2 * np.sqrt(np.pi)
+    ) ** 0.2
+
+
+def h_Gauss_to_K_fast(h: float | np.floating, betas: np.ndarray) -> np.floating:
+    return h * h_Gauss_to_K_factor_fast(betas)
 
 
 # @njit(error_model="numpy")

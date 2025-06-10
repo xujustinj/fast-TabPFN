@@ -22,9 +22,11 @@ from sklearn.utils.validation import (
     validate_data,  # type: ignore
 )
 
+from tabpfn.profiling import timer
+
 from .ksum import (
-    betas_for_order,
-    h_Gauss_to_K,
+    betas_for_order_fast,
+    h_Gauss_to_K_factor_fast,
     ksum_numba,
 )
 
@@ -277,7 +279,8 @@ class KDITransformer(TransformerMixin, BaseEstimator):
         n_samples, _ = X.shape
 
         wgts = np.ones(n_samples).astype(X.dtype)
-        betas = betas_for_order(self.polyexp_order)
+        betas = betas_for_order_fast(self.polyexp_order)
+        h_Gauss_to_K_factor = h_Gauss_to_K_factor_fast(betas)
 
         # Allocate memory for numba
         if self.polyexp_eval == "uniform":
@@ -324,7 +327,7 @@ class KDITransformer(TransformerMixin, BaseEstimator):
                 assert isinstance(alpha, float)
 
                 # Bandwidth needs to be shrunk for polyexp kernel:
-                h = h_Gauss_to_K(alpha * np.std(col), betas)
+                h = float(alpha * np.std(col) * h_Gauss_to_K_factor)
                 col_mean = np.mean(col)
                 col -= col_mean  # noqa: PLW2901
                 col_sort = np.sort(col)
@@ -345,18 +348,19 @@ class KDITransformer(TransformerMixin, BaseEstimator):
                 else:
                     raise ValueError(f"Unexpected polyexp_eval: {self.polyexp_eval}")
 
-                ksum_numba(
-                    col_sort,
-                    wgts,
-                    col_eval,
-                    h,
-                    betas,
-                    density_out,
-                    counts,
-                    coefs,
-                    Ly,
-                    Ry,
-                )
+                with timer("ksum_numba"):
+                    ksum_numba(
+                        col_sort,
+                        wgts,
+                        col_eval,
+                        h,
+                        betas,
+                        density_out,
+                        counts,
+                        coefs,
+                        Ly,
+                        Ry,
+                    )
                 density_out /= n_samples * h
                 density_out[np.isnan(density_out)] = 1e-300
                 density_out[~np.isfinite(density_out)] = 1e-300

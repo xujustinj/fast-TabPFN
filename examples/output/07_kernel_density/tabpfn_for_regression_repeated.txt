@@ -52,38 +52,38 @@ Mode MAE: 49.12230175488616
 TIMING SUMMARY
 --------------------------------------------------------------------------------
 fit | i=0
-    total: 9.9865 s (5 iterations)
-  average: 1.9973 s ± 3.2889 s
-  fastest: 0.3250 s
-  slowest: 8.5750 s
+    total: 15.1108 s (5 iterations)
+  average: 3.0222 s ± 5.3436 s
+  fastest: 0.3233 s
+  slowest: 13.7092 s
 
 --------------------------------------------------------------------------------
 fit | i>0
-    total: 3.4461 s (20 iterations)
-  average: 0.1723 s ± 0.0410 s
-  fastest: 0.1458 s
-  slowest: 0.3474 s
+    total: 3.2835 s (20 iterations)
+  average: 0.1642 s ± 0.0116 s
+  fastest: 0.1447 s
+  slowest: 0.1852 s
 
 --------------------------------------------------------------------------------
 fit_preprocessing | i=0
-    total: 8.4289 s (5 iterations)
-  average: 1.6858 s ± 3.0913 s
-  fastest: 0.1340 s
-  slowest: 7.8683 s
+    total: 12.7254 s (5 iterations)
+  average: 2.5451 s ± 4.8075 s
+  fastest: 0.1362 s
+  slowest: 12.1601 s
 
 --------------------------------------------------------------------------------
 fit_preprocessing | i>0
-    total: 3.2189 s (20 iterations)
-  average: 0.1609 s ± 0.0407 s
-  fastest: 0.1341 s
-  slowest: 0.3351 s
+    total: 3.0616 s (20 iterations)
+  average: 0.1531 s ± 0.0108 s
+  fastest: 0.1349 s
+  slowest: 0.1737 s
 
 --------------------------------------------------------------------------------
 initialize_tabpfn_model | i=0
-    total: 0.9466 s (5 iterations)
-  average: 0.1893 s ± 0.0229 s
-  fastest: 0.1612 s
-  slowest: 0.2096 s
+    total: 1.9672 s (5 iterations)
+  average: 0.3934 s ± 0.4228 s
+  fastest: 0.1602 s
+  slowest: 1.2386 s
 
 --------------------------------------------------------------------------------
 initialize_tabpfn_model | i>0
@@ -94,87 +94,87 @@ initialize_tabpfn_model | i>0
 
 --------------------------------------------------------------------------------
 numpy_to_torch | i=0
-    total: 0.7504 s (120 iterations)
-  average: 0.0063 s ± 0.0655 s
+    total: 0.0373 s (120 iterations)
+  average: 0.0003 s ± 0.0007 s
   fastest: 0.0002 s
-  slowest: 0.7206 s
+  slowest: 0.0083 s
 
 --------------------------------------------------------------------------------
 numpy_to_torch | i>0
-    total: 0.1254 s (480 iterations)
+    total: 0.1245 s (480 iterations)
   average: 0.0003 s ± 0.0001 s
   fastest: 0.0002 s
-  slowest: 0.0007 s
+  slowest: 0.0006 s
 
 --------------------------------------------------------------------------------
 predict_mean | i=0
-    total: 4.5210 s (5 iterations)
-  average: 0.9042 s ± 1.0705 s
-  fastest: 0.3611 s
-  slowest: 3.0451 s
+    total: 3.4247 s (5 iterations)
+  average: 0.6849 s ± 0.6507 s
+  fastest: 0.3572 s
+  slowest: 1.9863 s
 
 --------------------------------------------------------------------------------
 predict_mean | i>0
-    total: 8.2210 s (20 iterations)
-  average: 0.4111 s ± 0.1027 s
-  fastest: 0.3599 s
-  slowest: 0.8353 s
+    total: 7.6787 s (20 iterations)
+  average: 0.3839 s ± 0.0277 s
+  fastest: 0.3582 s
+  slowest: 0.4451 s
 
 --------------------------------------------------------------------------------
 predict_mode | i=0
-    total: 1.9085 s (5 iterations)
-  average: 0.3817 s ± 0.0246 s
-  fastest: 0.3629 s
-  slowest: 0.4302 s
+    total: 1.8653 s (5 iterations)
+  average: 0.3731 s ± 0.0028 s
+  fastest: 0.3687 s
+  slowest: 0.3771 s
 
 --------------------------------------------------------------------------------
 predict_mode | i>0
-    total: 7.8684 s (20 iterations)
-  average: 0.3934 s ± 0.0388 s
-  fastest: 0.3626 s
-  slowest: 0.5085 s
+    total: 7.7124 s (20 iterations)
+  average: 0.3856 s ± 0.0278 s
+  fastest: 0.3632 s
+  slowest: 0.4444 s
 
 --------------------------------------------------------------------------------
 predict_quantiles | i=0
-    total: 1.9432 s (5 iterations)
-  average: 0.3886 s ± 0.0307 s
-  fastest: 0.3702 s
-  slowest: 0.4501 s
+    total: 1.8647 s (5 iterations)
+  average: 0.3729 s ± 0.0026 s
+  fastest: 0.3689 s
+  slowest: 0.3760 s
 
 --------------------------------------------------------------------------------
 predict_quantiles | i>0
-    total: 7.9131 s (20 iterations)
-  average: 0.3957 s ± 0.0351 s
-  fastest: 0.3528 s
-  slowest: 0.4666 s
+    total: 7.7953 s (20 iterations)
+  average: 0.3898 s ± 0.0287 s
+  fastest: 0.3659 s
+  slowest: 0.4499 s
 
 --------------------------------------------------------------------------------
 preprocessing | i=0
-    total: 0.7702 s (120 iterations)
-  average: 0.0064 s ± 0.0009 s
-  fastest: 0.0051 s
-  slowest: 0.0089 s
+    total: 0.7447 s (120 iterations)
+  average: 0.0062 s ± 0.0009 s
+  fastest: 0.0048 s
+  slowest: 0.0085 s
 
 --------------------------------------------------------------------------------
 preprocessing | i>0
-    total: 3.1935 s (480 iterations)
-  average: 0.0067 s ± 0.0017 s
-  fastest: 0.0048 s
-  slowest: 0.0280 s
+    total: 3.0751 s (480 iterations)
+  average: 0.0064 s ± 0.0011 s
+  fastest: 0.0047 s
+  slowest: 0.0104 s
 
 --------------------------------------------------------------------------------
 standardize_y | i=0
     total: 0.0039 s (5 iterations)
   average: 0.0008 s ± 0.0001 s
   fastest: 0.0007 s
-  slowest: 0.0009 s
+  slowest: 0.0010 s
 
 --------------------------------------------------------------------------------
 standardize_y | i>0
-    total: 0.0136 s (20 iterations)
+    total: 0.0133 s (20 iterations)
   average: 0.0007 s ± 0.0001 s
   fastest: 0.0006 s
-  slowest: 0.0009 s
+  slowest: 0.0008 s
 
 --------------------------------------------------------------------------------
 type_casting | i=0
@@ -185,7 +185,7 @@ type_casting | i=0
 
 --------------------------------------------------------------------------------
 type_casting | i>0
-    total: 0.0027 s (480 iterations)
+    total: 0.0030 s (480 iterations)
   average: 0.0000 s ± 0.0000 s
   fastest: 0.0000 s
   slowest: 0.0000 s
