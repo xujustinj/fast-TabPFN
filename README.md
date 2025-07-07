@@ -1,5 +1,9 @@
 # TabPFN
 
+> ## Fork Info
+>
+> This fork of TabPFN contains miscellaneous unofficial performance upgrades by [@xujustinj](https://github.com/xujustinj).
+
 [![PyPI version](https://badge.fury.io/py/tabpfn.svg)](https://badge.fury.io/py/tabpfn)
 [![Downloads](https://pepy.tech/badge/tabpfn)](https://pepy.tech/project/tabpfn)
 [![Discord](https://img.shields.io/discord/1285598202732482621?color=7289da&label=Discord&logo=discord&logoColor=ffffff)](https://discord.com/channels/1285598202732482621/)
@@ -27,18 +31,13 @@ CUDA optimization.
 > No GPU? Use our free hosted inference via [TabPFN Client](https://github.com/PriorLabs/tabpfn-client).
 
 ### Installation
-Official installation (pip)
+Installation from source
 ```bash
-pip install tabpfn
-```
-OR installation from source
-```bash
-pip install "tabpfn @ git+https://github.com/PriorLabs/TabPFN.git"
+pip install "tabpfn @ git+https://github.com/xujustinj/fast-TabPFN.git"
 ```
 OR local development installation
 ```bash
-
-git clone https://github.com/PriorLabs/TabPFN.git
+git clone git@github.com:xujustinj/fast-TabPFN.git
 pip install -e "TabPFN[dev]"
 ```
 
@@ -86,7 +85,7 @@ y = df.target.astype(float)  # Ensure target is float for regression
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
 
 # Initialize the regressor
-regressor = TabPFNRegressor()
+regressor = TabPFNRegressor(fit_mode="parallel") # use parallel for ~40% speedup
 regressor.fit(X_train, y_train)
 
 # Predict on the test set
