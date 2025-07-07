@@ -191,6 +191,7 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
             "fit_preprocessors",
             "fit_with_cache",
             "batched",
+            "parallel",
         ] = "fit_preprocessors",
         memory_saving_mode: bool | Literal["auto"] | float | int = "auto",
         random_state: int | np.random.RandomState | np.random.Generator | None = 0,
@@ -405,7 +406,9 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         self.inference_precision: torch.dtype | Literal["autocast", "auto"] = (
             inference_precision
         )
-        self.fit_mode: Literal["low_memory", "fit_preprocessors", "batched"] = fit_mode
+        self.fit_mode: Literal[
+            "low_memory", "fit_preprocessors", "batched", "parallel"
+        ] = fit_mode
         self.memory_saving_mode: bool | Literal["auto"] | float | int = (
             memory_saving_mode
         )
@@ -778,9 +781,9 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         if quantiles is None:
             quantiles = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         else:
-            assert all(
-                (0 <= q <= 1) and (isinstance(q, float)) for q in quantiles
-            ), "All quantiles must be between 0 and 1 and floats."
+            assert all((0 <= q <= 1) and (isinstance(q, float)) for q in quantiles), (
+                "All quantiles must be between 0 and 1 and floats."
+            )
         if output_type not in _USABLE_OUTPUT_TYPES:
             raise ValueError(f"Invalid output type: {output_type}")
 

@@ -11,6 +11,7 @@ set -e
 
 source setup.sh
 
-python examples/tabpfn_for_regression_repeated.py --fit-mode low_memory
 python examples/tabpfn_for_regression_repeated.py --fit-mode fit_preprocessors
 python examples/tabpfn_for_regression_repeated.py --fit-mode fit_with_cache
+python examples/tabpfn_for_regression_repeated.py --fit-mode low_memory
+python examples/tabpfn_for_regression_repeated.py --fit-mode parallel

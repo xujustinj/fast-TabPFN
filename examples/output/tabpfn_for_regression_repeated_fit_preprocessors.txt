@@ -102,301 +102,301 @@ Mode MAE: 47.247066001369525
 TIMING SUMMARY
 --------------------------------------------------------------------------------
 i=0 (10 iterations)
-  average: 1.2030 s ± 0.4026 s
-  fastest: 1.0608 s on iteration 5
-  slowest: 2.4105 s on iteration 1
+  average: 1.2124 s ± 0.4024 s
+  fastest: 1.0640 s on iteration 7
+  slowest: 2.4194 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/fit (10 iterations)
-  average: 0.2943 s ± 0.1140 s
-  fastest: 0.2517 s on iteration 5
-  slowest: 0.6361 s on iteration 1
+  average: 0.2951 s ± 0.1145 s
+  fastest: 0.2559 s on iteration 2
+  slowest: 0.6385 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/fit/regressor_fit (10 iterations)
-  average: 0.2943 s ± 0.1140 s
-  fastest: 0.2517 s on iteration 5
-  slowest: 0.6361 s on iteration 1
+  average: 0.2951 s ± 0.1145 s
+  fastest: 0.2559 s on iteration 2
+  slowest: 0.6385 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/fit/regressor_fit/initialize_tabpfn_model (10 iterations)
-  average: 0.1245 s ± 0.0101 s
-  fastest: 0.1174 s on iteration 5
-  slowest: 0.1528 s on iteration 1
+  average: 0.1258 s ± 0.0118 s
+  fastest: 0.1212 s on iteration 6
+  slowest: 0.1611 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/fit/regressor_fit/create_inference_engine (10 iterations)
-  average: 0.1274 s ± 0.0249 s
-  fastest: 0.1187 s on iteration 7
-  slowest: 0.2021 s on iteration 1
+  average: 0.1200 s ± 0.0020 s
+  fastest: 0.1185 s on iteration 7
+  slowest: 0.1255 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/fit/regressor_fit/create_inference_engine/inference_engine_cache_preprocessing_prepare (10 iterations)
-  average: 0.1274 s ± 0.0249 s
-  fastest: 0.1187 s on iteration 7
-  slowest: 0.2021 s on iteration 1
+  average: 0.1200 s ± 0.0020 s
+  fastest: 0.1185 s on iteration 7
+  slowest: 0.1254 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/fit/regressor_fit/create_inference_engine/inference_engine_cache_preprocessing_prepare/fit_preprocessing (10 iterations)
   average: 0.0000 s ± 0.0000 s
-  fastest: 0.0000 s on iteration 8
+  fastest: 0.0000 s on iteration 5
   slowest: 0.0000 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/predict_mean (10 iterations)
-  average: 0.3609 s ± 0.2860 s
-  fastest: 0.2639 s on iteration 5
-  slowest: 1.2190 s on iteration 1
+  average: 0.3633 s ± 0.2884 s
+  fastest: 0.2634 s on iteration 7
+  slowest: 1.2286 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/predict_mean/regressor_forward (10 iterations)
-  average: 0.3376 s ± 0.2424 s
-  fastest: 0.2552 s on iteration 5
-  slowest: 1.0648 s on iteration 1
+  average: 0.3395 s ± 0.2443 s
+  fastest: 0.2546 s on iteration 7
+  slowest: 1.0723 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/predict_mean/regressor_forward/inference_engine_cache_preprocessing_iter_outputs (10 iterations)
   average: 0.0000 s ± 0.0000 s
   fastest: 0.0000 s on iteration 10
-  slowest: 0.0000 s on iteration 2
+  slowest: 0.0000 s on iteration 5
 
 --------------------------------------------------------------------------------
 i=0/predict_mean/regressor_forward/model_to_device (10 iterations)
-  average: 0.0009 s ± 0.0000 s
-  fastest: 0.0009 s on iteration 4
-  slowest: 0.0009 s on iteration 1
+  average: 0.0010 s ± 0.0000 s
+  fastest: 0.0009 s on iteration 2
+  slowest: 0.0010 s on iteration 8
 
 --------------------------------------------------------------------------------
 i=0/predict_mean/regressor_forward/transformer_forward (80 iterations)
-  average: 0.0347 s ± 0.0856 s
-  fastest: 0.0240 s on iteration 19
-  slowest: 0.7953 s on iteration 1
+  average: 0.0348 s ± 0.0865 s
+  fastest: 0.0238 s on iteration 11
+  slowest: 0.8034 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/predict_mean/regressor_forward/model_to_cpu (10 iterations)
-  average: 0.0093 s ± 0.0067 s
-  fastest: 0.0064 s on iteration 6
-  slowest: 0.0283 s on iteration 1
+  average: 0.0083 s ± 0.0070 s
+  fastest: 0.0058 s on iteration 4
+  slowest: 0.0293 s on iteration 1
 
 --------------------------------------------------------------------------------
 i=0/predict_quantiles (10 iterations)
-  average: 0.2737 s ± 0.0034 s
-  fastest: 0.2713 s on iteration 6
-  slowest: 0.2807 s on iteration 2
+  average: 0.2754 s ± 0.0031 s
+  fastest: 0.2700 s on iteration 7
+  slowest: 0.2803 s on iteration 3
 
 --------------------------------------------------------------------------------
 i=0/predict_quantiles/regressor_forward (10 iterations)
-  average: 0.2648 s ± 0.0032 s
-  fastest: 0.2626 s on iteration 6
-  slowest: 0.2719 s on iteration 2
+  average: 0.2662 s ± 0.0030 s
+  fastest: 0.2611 s on iteration 7
+  slowest: 0.2709 s on iteration 3
 
 --------------------------------------------------------------------------------
 i=0/predict_quantiles/regressor_forward/inference_engine_cache_preprocessing_iter_outputs (10 iterations)
-  average: 0.0000 s ± 0.0000 s
-  fastest: 0.0000 s on iteration 1
-  slowest: 0.0000 s on iteration 6
-
---------------------------------------------------------------------------------
-i=0/predict_quantiles/regressor_forward/model_to_device (10 iterations)
-  average: 0.0079 s ± 0.0007 s
-  fastest: 0.0075 s on iteration 5
-  slowest: 0.0098 s on iteration 2
-
---------------------------------------------------------------------------------
-i=0/predict_quantiles/regressor_forward/transformer_forward (80 iterations)
-  average: 0.0251 s ± 0.0008 s
-  fastest: 0.0241 s on iteration 19
-  slowest: 0.0266 s on iteration 37
-
---------------------------------------------------------------------------------
-i=0/predict_quantiles/regressor_forward/model_to_cpu (10 iterations)
-  average: 0.0078 s ± 0.0029 s
-  fastest: 0.0062 s on iteration 6
-  slowest: 0.0137 s on iteration 1
-
---------------------------------------------------------------------------------
-i=0/predict_mode (10 iterations)
-  average: 0.2710 s ± 0.0007 s
-  fastest: 0.2701 s on iteration 2
-  slowest: 0.2722 s on iteration 7
-
---------------------------------------------------------------------------------
-i=0/predict_mode/regressor_forward (10 iterations)
-  average: 0.2626 s ± 0.0007 s
-  fastest: 0.2616 s on iteration 1
-  slowest: 0.2639 s on iteration 7
-
---------------------------------------------------------------------------------
-i=0/predict_mode/regressor_forward/inference_engine_cache_preprocessing_iter_outputs (10 iterations)
   average: 0.0000 s ± 0.0000 s
   fastest: 0.0000 s on iteration 9
   slowest: 0.0000 s on iteration 1
 
 --------------------------------------------------------------------------------
+i=0/predict_quantiles/regressor_forward/model_to_device (10 iterations)
+  average: 0.0077 s ± 0.0002 s
+  fastest: 0.0074 s on iteration 7
+  slowest: 0.0079 s on iteration 3
+
+--------------------------------------------------------------------------------
+i=0/predict_quantiles/regressor_forward/transformer_forward (80 iterations)
+  average: 0.0252 s ± 0.0008 s
+  fastest: 0.0239 s on iteration 27
+  slowest: 0.0273 s on iteration 21
+
+--------------------------------------------------------------------------------
+i=0/predict_quantiles/regressor_forward/model_to_cpu (10 iterations)
+  average: 0.0067 s ± 0.0024 s
+  fastest: 0.0058 s on iteration 7
+  slowest: 0.0139 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/predict_mode (10 iterations)
+  average: 0.2753 s ± 0.0036 s
+  fastest: 0.2707 s on iteration 1
+  slowest: 0.2825 s on iteration 2
+
+--------------------------------------------------------------------------------
+i=0/predict_mode/regressor_forward (10 iterations)
+  average: 0.2665 s ± 0.0037 s
+  fastest: 0.2602 s on iteration 1
+  slowest: 0.2736 s on iteration 2
+
+--------------------------------------------------------------------------------
+i=0/predict_mode/regressor_forward/inference_engine_cache_preprocessing_iter_outputs (10 iterations)
+  average: 0.0000 s ± 0.0000 s
+  fastest: 0.0000 s on iteration 5
+  slowest: 0.0000 s on iteration 8
+
+--------------------------------------------------------------------------------
 i=0/predict_mode/regressor_forward/model_to_device (10 iterations)
-  average: 0.0076 s ± 0.0001 s
-  fastest: 0.0074 s on iteration 5
-  slowest: 0.0077 s on iteration 7
+  average: 0.0077 s ± 0.0002 s
+  fastest: 0.0074 s on iteration 7
+  slowest: 0.0082 s on iteration 2
 
 --------------------------------------------------------------------------------
 i=0/predict_mode/regressor_forward/transformer_forward (80 iterations)
-  average: 0.0251 s ± 0.0008 s
-  fastest: 0.0240 s on iteration 4
-  slowest: 0.0266 s on iteration 77
+  average: 0.0252 s ± 0.0008 s
+  fastest: 0.0238 s on iteration 4
+  slowest: 0.0273 s on iteration 77
 
 --------------------------------------------------------------------------------
 i=0/predict_mode/regressor_forward/model_to_cpu (10 iterations)
-  average: 0.0063 s ± 0.0001 s
-  fastest: 0.0062 s on iteration 5
-  slowest: 0.0064 s on iteration 9
+  average: 0.0060 s ± 0.0001 s
+  fastest: 0.0059 s on iteration 7
+  slowest: 0.0062 s on iteration 2
 
 --------------------------------------------------------------------------------
 i>0 (90 iterations)
-  average: 1.0855 s ± 0.0274 s
-  fastest: 1.0579 s on iteration 24
-  slowest: 1.2197 s on iteration 84
+  average: 1.0913 s ± 0.0278 s
+  fastest: 1.0598 s on iteration 15
+  slowest: 1.2299 s on iteration 84
 
 --------------------------------------------------------------------------------
 i>0/fit (90 iterations)
-  average: 0.2691 s ± 0.0222 s
-  fastest: 0.2484 s on iteration 24
-  slowest: 0.4020 s on iteration 34
+  average: 0.2681 s ± 0.0249 s
+  fastest: 0.2523 s on iteration 33
+  slowest: 0.4104 s on iteration 84
 
 --------------------------------------------------------------------------------
 i>0/fit/regressor_fit (90 iterations)
-  average: 0.2691 s ± 0.0222 s
-  fastest: 0.2484 s on iteration 24
-  slowest: 0.4020 s on iteration 34
+  average: 0.2681 s ± 0.0249 s
+  fastest: 0.2523 s on iteration 33
+  slowest: 0.4104 s on iteration 84
 
 --------------------------------------------------------------------------------
 i>0/fit/regressor_fit/initialize_tabpfn_model (90 iterations)
-  average: 0.1296 s ± 0.0215 s
-  fastest: 0.1167 s on iteration 26
-  slowest: 0.2655 s on iteration 34
+  average: 0.1269 s ± 0.0210 s
+  fastest: 0.1195 s on iteration 77
+  slowest: 0.2666 s on iteration 84
 
 --------------------------------------------------------------------------------
 i>0/fit/regressor_fit/create_inference_engine (90 iterations)
-  average: 0.1228 s ± 0.0043 s
-  fastest: 0.1141 s on iteration 24
-  slowest: 0.1305 s on iteration 67
+  average: 0.1246 s ± 0.0135 s
+  fastest: 0.1148 s on iteration 24
+  slowest: 0.2453 s on iteration 9
 
 --------------------------------------------------------------------------------
 i>0/fit/regressor_fit/create_inference_engine/inference_engine_cache_preprocessing_prepare (90 iterations)
-  average: 0.1228 s ± 0.0043 s
-  fastest: 0.1141 s on iteration 24
-  slowest: 0.1305 s on iteration 67
+  average: 0.1246 s ± 0.0135 s
+  fastest: 0.1147 s on iteration 24
+  slowest: 0.2453 s on iteration 9
 
 --------------------------------------------------------------------------------
 i>0/fit/regressor_fit/create_inference_engine/inference_engine_cache_preprocessing_prepare/fit_preprocessing (90 iterations)
   average: 0.0000 s ± 0.0000 s
-  fastest: 0.0000 s on iteration 65
-  slowest: 0.0000 s on iteration 20
+  fastest: 0.0000 s on iteration 34
+  slowest: 0.0000 s on iteration 7
 
 --------------------------------------------------------------------------------
 i>0/predict_mean (90 iterations)
-  average: 0.2679 s ± 0.0156 s
-  fastest: 0.2637 s on iteration 2
-  slowest: 0.3827 s on iteration 9
+  average: 0.2698 s ± 0.0113 s
+  fastest: 0.2612 s on iteration 62
+  slowest: 0.3701 s on iteration 58
 
 --------------------------------------------------------------------------------
 i>0/predict_mean/regressor_forward (90 iterations)
-  average: 0.2590 s ± 0.0156 s
-  fastest: 0.2548 s on iteration 2
-  slowest: 0.3738 s on iteration 9
+  average: 0.2606 s ± 0.0112 s
+  fastest: 0.2523 s on iteration 61
+  slowest: 0.3608 s on iteration 58
 
 --------------------------------------------------------------------------------
 i>0/predict_mean/regressor_forward/inference_engine_cache_preprocessing_iter_outputs (90 iterations)
   average: 0.0000 s ± 0.0000 s
-  fastest: 0.0000 s on iteration 4
-  slowest: 0.0000 s on iteration 67
+  fastest: 0.0000 s on iteration 56
+  slowest: 0.0000 s on iteration 76
 
 --------------------------------------------------------------------------------
 i>0/predict_mean/regressor_forward/model_to_device (90 iterations)
-  average: 0.0009 s ± 0.0000 s
-  fastest: 0.0008 s on iteration 4
-  slowest: 0.0009 s on iteration 47
+  average: 0.0010 s ± 0.0000 s
+  fastest: 0.0009 s on iteration 18
+  slowest: 0.0011 s on iteration 17
 
 --------------------------------------------------------------------------------
 i>0/predict_mean/regressor_forward/transformer_forward (720 iterations)
-  average: 0.0252 s ± 0.0036 s
-  fastest: 0.0239 s on iteration 3
-  slowest: 0.1180 s on iteration 464
+  average: 0.0253 s ± 0.0039 s
+  fastest: 0.0235 s on iteration 483
+  slowest: 0.1264 s on iteration 464
 
 --------------------------------------------------------------------------------
 i>0/predict_mean/regressor_forward/model_to_cpu (90 iterations)
-  average: 0.0064 s ± 0.0001 s
-  fastest: 0.0062 s on iteration 63
-  slowest: 0.0066 s on iteration 86
+  average: 0.0061 s ± 0.0005 s
+  fastest: 0.0058 s on iteration 21
+  slowest: 0.0105 s on iteration 31
 
 --------------------------------------------------------------------------------
 i>0/predict_quantiles (90 iterations)
-  average: 0.2735 s ± 0.0026 s
-  fastest: 0.2701 s on iteration 2
-  slowest: 0.2813 s on iteration 31
+  average: 0.2758 s ± 0.0036 s
+  fastest: 0.2690 s on iteration 62
+  slowest: 0.2853 s on iteration 63
 
 --------------------------------------------------------------------------------
 i>0/predict_quantiles/regressor_forward (90 iterations)
-  average: 0.2647 s ± 0.0026 s
-  fastest: 0.2614 s on iteration 2
-  slowest: 0.2725 s on iteration 31
+  average: 0.2665 s ± 0.0033 s
+  fastest: 0.2601 s on iteration 62
+  slowest: 0.2754 s on iteration 7
 
 --------------------------------------------------------------------------------
 i>0/predict_quantiles/regressor_forward/inference_engine_cache_preprocessing_iter_outputs (90 iterations)
   average: 0.0000 s ± 0.0000 s
-  fastest: 0.0000 s on iteration 35
-  slowest: 0.0000 s on iteration 21
+  fastest: 0.0000 s on iteration 17
+  slowest: 0.0000 s on iteration 63
 
 --------------------------------------------------------------------------------
 i>0/predict_quantiles/regressor_forward/model_to_device (90 iterations)
-  average: 0.0077 s ± 0.0003 s
-  fastest: 0.0075 s on iteration 24
-  slowest: 0.0098 s on iteration 6
+  average: 0.0078 s ± 0.0002 s
+  fastest: 0.0074 s on iteration 62
+  slowest: 0.0085 s on iteration 12
 
 --------------------------------------------------------------------------------
 i>0/predict_quantiles/regressor_forward/transformer_forward (720 iterations)
-  average: 0.0251 s ± 0.0008 s
-  fastest: 0.0239 s on iteration 3
-  slowest: 0.0291 s on iteration 53
+  average: 0.0252 s ± 0.0009 s
+  fastest: 0.0236 s on iteration 491
+  slowest: 0.0280 s on iteration 24
 
 --------------------------------------------------------------------------------
 i>0/predict_quantiles/regressor_forward/model_to_cpu (90 iterations)
-  average: 0.0073 s ± 0.0024 s
-  fastest: 0.0062 s on iteration 3
-  slowest: 0.0136 s on iteration 54
+  average: 0.0063 s ± 0.0012 s
+  fastest: 0.0058 s on iteration 42
+  slowest: 0.0138 s on iteration 67
 
 --------------------------------------------------------------------------------
 i>0/predict_mode (90 iterations)
-  average: 0.2720 s ± 0.0021 s
-  fastest: 0.2698 s on iteration 6
-  slowest: 0.2806 s on iteration 36
+  average: 0.2745 s ± 0.0032 s
+  fastest: 0.2686 s on iteration 42
+  slowest: 0.2826 s on iteration 10
 
 --------------------------------------------------------------------------------
 i>0/predict_mode/regressor_forward (90 iterations)
-  average: 0.2638 s ± 0.0021 s
-  fastest: 0.2615 s on iteration 58
-  slowest: 0.2724 s on iteration 36
+  average: 0.2660 s ± 0.0031 s
+  fastest: 0.2602 s on iteration 42
+  slowest: 0.2739 s on iteration 10
 
 --------------------------------------------------------------------------------
 i>0/predict_mode/regressor_forward/inference_engine_cache_preprocessing_iter_outputs (90 iterations)
   average: 0.0000 s ± 0.0000 s
-  fastest: 0.0000 s on iteration 58
-  slowest: 0.0000 s on iteration 6
+  fastest: 0.0000 s on iteration 21
+  slowest: 0.0000 s on iteration 80
 
 --------------------------------------------------------------------------------
 i>0/predict_mode/regressor_forward/model_to_device (90 iterations)
-  average: 0.0076 s ± 0.0003 s
-  fastest: 0.0074 s on iteration 3
-  slowest: 0.0101 s on iteration 87
+  average: 0.0077 s ± 0.0002 s
+  fastest: 0.0074 s on iteration 15
+  slowest: 0.0084 s on iteration 85
 
 --------------------------------------------------------------------------------
 i>0/predict_mode/regressor_forward/transformer_forward (720 iterations)
-  average: 0.0251 s ± 0.0009 s
-  fastest: 0.0240 s on iteration 19
-  slowest: 0.0334 s on iteration 392
+  average: 0.0252 s ± 0.0008 s
+  fastest: 0.0237 s on iteration 452
+  slowest: 0.0275 s on iteration 704
 
 --------------------------------------------------------------------------------
 i>0/predict_mode/regressor_forward/model_to_cpu (90 iterations)
-  average: 0.0067 s ± 0.0016 s
-  fastest: 0.0062 s on iteration 20
-  slowest: 0.0136 s on iteration 36
+  average: 0.0061 s ± 0.0003 s
+  fastest: 0.0058 s on iteration 64
+  slowest: 0.0077 s on iteration 28
 

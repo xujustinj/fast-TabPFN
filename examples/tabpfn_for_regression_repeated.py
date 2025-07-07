@@ -20,7 +20,13 @@ X, y = load_diabetes(return_X_y=True)
 
 
 def main(
-    fit_mode: Literal["low_memory", "fit_preprocessors", "fit_with_cache"],
+    *,
+    fit_mode: Literal[
+        "fit_preprocessors",
+        "fit_with_cache",
+        "low_memory",
+        "parallel",
+    ],
 ):
     reg = TabPFNRegressor(fit_mode=fit_mode)
 
@@ -78,16 +84,24 @@ if __name__ == "__main__":
     parser.add_argument("--trials", type=int, default=10)
     parser.add_argument(
         "--fit-mode",
-        choices=["low_memory", "fit_preprocessors", "fit_with_cache"],
+        choices=[
+            "fit_preprocessors",
+            "fit_with_cache",
+            "low_memory",
+            "parallel",
+        ],
         default="fit_preprocessors",
     )
     parser.add_argument("--name", type=str, default="")
     args = parser.parse_args()
 
     name = str(args.name)
-    fit_mode: Literal["low_memory", "fit_preprocessors", "fit_with_cache"] = (
-        args.fit_mode
-    )
+    fit_mode: Literal[
+        "fit_preprocessors",
+        "fit_with_cache",
+        "low_memory",
+        "parallel",
+    ] = args.fit_mode
 
     base_path = Path("examples/output")
     if len(name) > 0:

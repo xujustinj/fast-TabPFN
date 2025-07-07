@@ -26,6 +26,7 @@ from tabpfn.inference import (
     InferenceEngineCacheKV,
     InferenceEngineCachePreprocessing,
     InferenceEngineOnDemand,
+    InferenceEngineParallel,
 )
 from tabpfn.model.bar_distribution import FullSupportBarDistribution
 from tabpfn.model.loading import load_model_criterion_config
@@ -223,7 +224,13 @@ def create_inference_engine(  # noqa: PLR0913
     model: PerFeatureTransformer,
     ensemble_configs: Any,
     cat_ix: list[int],
-    fit_mode: Literal["low_memory", "fit_preprocessors", "fit_with_cache", "batched"],
+    fit_mode: Literal[
+        "low_memory",
+        "fit_preprocessors",
+        "fit_with_cache",
+        "batched",
+        "parallel",
+    ],
     device_: torch.device,
     rng: np.random.Generator,
     n_jobs: int,
@@ -262,6 +269,7 @@ def create_inference_engine(  # noqa: PLR0913
         | InferenceEngineCachePreprocessing
         | InferenceEngineCacheKV
         | InferenceEngineBatchedNoPreprocessing
+        | InferenceEngineParallel
     )
     if fit_mode == "low_memory":
         engine = InferenceEngineOnDemand.prepare(
@@ -316,6 +324,20 @@ def create_inference_engine(  # noqa: PLR0913
             inference_mode=inference_mode,
             save_peak_mem=memory_saving_mode,
             dtype_byte_size=byte_size,
+        )
+    elif fit_mode == "parallel":
+        engine = InferenceEngineParallel.prepare(
+            X_train=X_train,
+            y_train=y_train,
+            cat_ix=cat_ix,
+            model=model,
+            ensemble_configs=ensemble_configs,
+            rng=rng,
+            n_workers=n_jobs,
+            dtype_byte_size=byte_size,
+            force_inference_dtype=forced_inference_dtype_,
+            save_peak_mem=memory_saving_mode,
+            inference_mode=inference_mode,
         )
     else:
         raise ValueError(f"Invalid fit_mode: {fit_mode}")

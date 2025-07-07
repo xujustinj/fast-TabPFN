@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import contextlib
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from collections.abc import Iterator, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
@@ -73,7 +74,7 @@ class InferenceEngine(ABC):
         *,
         device: torch.device,
         autocast: bool,
-    ) -> Iterator[tuple[torch.Tensor, EnsembleConfig]]:
+    ) -> Iterator[tuple[torch.Tensor | dict, EnsembleConfig]]:
         """Iterate over the outputs of the model.
 
         One for each ensemble configuration that was used to initialize the executor.
@@ -372,7 +373,7 @@ class InferenceEngineBatchedNoPreprocessing(InferenceEngine):
                 self.model = self.model.cpu()
 
     @override
-    def use_torch_inference_mode(self, use_inference: bool):
+    def use_torch_inference_mode(self, *, use_inference: bool):
         self.inference_mode = use_inference
 
 
@@ -538,7 +539,7 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
                 self.model = self.model.cpu()
 
     @override
-    def use_torch_inference_mode(self, use_inference: bool):
+    def use_torch_inference_mode(self, *, use_inference: bool):
         self.inference_mode = use_inference
 
 
@@ -553,7 +554,7 @@ class InferenceEngineCacheKV(InferenceEngine):
     """
 
     preprocessors: list[SequentialFeatureTransformer]
-    ensemble_configs: list[EnsembleConfig]
+    ensemble_configs: Sequence[EnsembleConfig]
     cat_ixs: Sequence[list[int]]
     models: list[PerFeatureTransformer]
     n_train_samples: list[int]
@@ -616,7 +617,8 @@ class InferenceEngineCacheKV(InferenceEngine):
             correct_order_configs.append(config)
             n_train_samples.append(len(y))
 
-            ens_model = deepcopy(model)
+            with timer("model_deepcopy"):
+                ens_model = deepcopy(model)
             with timer("model_to_device"):
                 ens_model = ens_model.to(device)
             if not isinstance(X, torch.Tensor):
@@ -719,3 +721,210 @@ class InferenceEngineCacheKV(InferenceEngine):
             output = output if isinstance(output, dict) else output.squeeze(1)
 
             yield output, config
+
+
+@dataclass
+class InferenceEngineParallel(InferenceEngine):
+    """Inference engine that batches ensemble members together for efficient inference.
+
+    This engine is designed for GPUs with sufficient memory to process multiple
+    batches of inputs simultaneously.
+    """
+
+    X_trains: list[torch.Tensor]
+    y_trains: list[torch.Tensor]
+    cat_ixs: Sequence[list[int]]
+    preprocessors: list[
+        SequentialFeatureTransformer
+    ]  # Preprocessors for each ensemble member
+    model: PerFeatureTransformer  # Single model instance shared across ensemble members
+    ensemble_configs: Sequence[EnsembleConfig]
+    force_inference_dtype: torch.dtype | None
+    inference_mode: bool
+
+    @classmethod
+    @timed("inference_engine_parallel_prepare")
+    def prepare(
+        cls,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        *,
+        cat_ix: list[int],
+        model: PerFeatureTransformer,
+        ensemble_configs: Sequence[EnsembleConfig],
+        rng: np.random.Generator,
+        n_workers: int,
+        dtype_byte_size: int,
+        force_inference_dtype: torch.dtype | None,
+        save_peak_mem: bool | Literal["auto"] | float | int,
+        inference_mode: bool,
+    ) -> InferenceEngineParallel:
+        """Prepare the parallel inference engine.
+
+        Args:
+            X_train: The training data.
+            y_train: The training target.
+            cat_ix: The categorical indices.
+            model: The base model to duplicate for each ensemble member.
+            ensemble_configs: The ensemble configurations to use.
+            rng: The random number generator.
+            n_workers: The number of workers to use.
+            dtype_byte_size: The byte size of the dtype.
+            force_inference_dtype: The dtype to force inference to.
+            save_peak_mem: Whether to save peak memory usage.
+            inference_mode: Whether to use torch inference mode.
+            max_parallel_models: Maximum number of models to run in parallel.
+        """
+        # Use fit_preprocessing to generate ensemble members, similar to other engines
+        itr = fit_preprocessing(
+            configs=ensemble_configs,
+            X_train=X_train,
+            y_train=y_train,
+            random_state=rng,
+            cat_ix=cat_ix,
+            n_workers=n_workers,
+            parallel_mode="block",
+        )
+        configs, preprocessors, X_trains, y_trains, cat_ixs = list(zip(*itr))
+
+        # Convert to tensors and prepare for batched format
+        X_train_tensors: list[torch.Tensor] = [
+            X_train_item
+            if isinstance(X_train_item, torch.Tensor)
+            else torch.as_tensor(X_train_item, dtype=torch.float32)
+            for X_train_item in X_trains
+        ]
+        y_train_tensors: list[torch.Tensor] = [
+            y_train_item
+            if isinstance(y_train_item, torch.Tensor)
+            else torch.as_tensor(y_train_item, dtype=torch.float32)
+            for y_train_item in y_trains
+        ]
+
+        return cls(
+            X_trains=X_train_tensors,
+            y_trains=y_train_tensors,
+            cat_ixs=cat_ixs,
+            preprocessors=preprocessors,  # Store preprocessors for each ensemble member
+            model=model,  # Use single model instance
+            ensemble_configs=configs,
+            force_inference_dtype=force_inference_dtype,
+            inference_mode=inference_mode,
+            dtype_byte_size=dtype_byte_size,
+            save_peak_mem=save_peak_mem,
+        )
+
+    @timed("inference_engine_parallel_iter_outputs")
+    @override
+    def iter_outputs(
+        self,
+        X: np.ndarray,
+        *,
+        device: torch.device,
+        autocast: bool,
+        only_return_standard_out: bool = True,
+    ) -> Iterator[tuple[torch.Tensor | dict, EnsembleConfig]]:
+        ensemble_size = len(self.X_trains)
+
+        with timer("model_to_device"):
+            model = self.model.to(device)
+        if self.force_inference_dtype is not None:
+            model = model.type(self.force_inference_dtype)
+
+        # Group ensemble members by tensor shapes
+        shape_groups: dict[
+            tuple[int, int],
+            list[tuple[torch.Tensor, torch.Tensor, list[int], int]],
+        ] = defaultdict(
+            list
+        )  # shape -> list of (tensor, y_tensor, cat_ix, ensemble_idx)
+
+        for ensemble_idx in range(ensemble_size):
+            # Preprocess test data for this ensemble member
+            X_train_device = self.X_trains[ensemble_idx].to(device, non_blocking=True)
+            X_test = self.preprocessors[ensemble_idx].transform(X).X
+            if not isinstance(X_test, torch.Tensor):
+                X_test = torch.as_tensor(X_test, dtype=torch.float32)
+            X_test = X_test.to(device)
+
+            # Concatenate train and test data along sequence dimension
+            X_full = torch.cat([X_train_device, X_test], dim=0)
+            train_y_batch = self.y_trains[ensemble_idx].to(device, non_blocking=True)
+
+            # Handle type casting
+            with contextlib.suppress(Exception):  # Avoid overflow error
+                X_full = X_full.float()
+            if self.force_inference_dtype is not None:
+                X_full = X_full.type(self.force_inference_dtype)
+                train_y_batch = train_y_batch.type(self.force_inference_dtype)
+
+            # Group by shape
+            N, F = X_full.shape
+            shape_groups[(N, F)].append(
+                (X_full, train_y_batch, self.cat_ixs[ensemble_idx], ensemble_idx)
+            )
+
+        # Process each shape group separately
+        outputs_by_ensemble_idx: dict[int, torch.Tensor | dict] = {}
+        for _, group in shape_groups.items():
+            # Extract tensors and metadata for this shape group
+            X_tensors, y_tensors, cat_ix_flat, ensemble_indices = zip(*group)
+
+            # Stack tensors along batch dimension
+            X_batched = torch.stack(
+                X_tensors, dim=1
+            )  # (seq_len, batch_size, num_features)
+            y_batched = torch.stack(y_tensors, dim=1)  # (seq_len, batch_size)
+
+            # Run forward pass for this shape group
+            with (
+                torch.autocast(device.type, enabled=autocast),
+                torch.inference_mode(self.inference_mode),
+            ):
+                output = model(
+                    *(None, X_batched, y_batched),
+                    only_return_standard_out=only_return_standard_out,
+                    categorical_inds=cat_ix_flat,
+                    single_eval_pos=len(
+                        y_tensors[0]
+                    ),  # All y_tensors in group have same length
+                )
+
+            # Store outputs with their ensemble indices
+            if isinstance(output, dict):
+                for key, value in output.items():
+                    if isinstance(value, torch.Tensor):
+                        assert value.shape[1] == len(ensemble_indices), (
+                            f"Unexpected output shape for key {key}: {value.shape}"
+                        )
+                    else:
+                        raise ValueError(
+                            f"Unexpected output type for key {key}: {type(value)}"
+                        )
+
+                for i, ensemble_idx in enumerate(ensemble_indices):
+                    ensemble_output = {
+                        key: value[:, i, ...] for key, value in output.items()
+                    }
+                    outputs_by_ensemble_idx[ensemble_idx] = ensemble_output
+            elif isinstance(output, torch.Tensor):
+                assert output.shape[1] == len(ensemble_indices), (
+                    f"Unexpected output shape: {output.shape}"
+                )
+                for i, ensemble_idx in enumerate(ensemble_indices):
+                    ensemble_output = output[:, i, ...]
+                    outputs_by_ensemble_idx[ensemble_idx] = ensemble_output
+            else:
+                raise ValueError(f"Unexpected output type: {type(output)}")
+
+        # Move model back to CPU if in inference mode
+        if self.inference_mode:
+            model = model.cpu()
+
+        # Yield results in original ensemble order
+        for i in range(ensemble_size):
+            yield outputs_by_ensemble_idx[i], self.ensemble_configs[i]
+
+    @override
+    def use_torch_inference_mode(self, *, use_inference: bool):
+        self.inference_mode = use_inference
