@@ -20,6 +20,9 @@ import torch
 from tabpfn.model.memory import MemoryUsageEstimator
 from tabpfn.preprocessing import fit_preprocessing
 
+# --- Profiling imports ---
+from tabpfn.profiling import timed, timer
+
 if TYPE_CHECKING:
     from tabpfn.model.preprocessing import SequentialFeatureTransformer
     from tabpfn.model.transformer import PerFeatureTransformer
@@ -145,6 +148,7 @@ class InferenceEngineOnDemand(InferenceEngine):
     force_inference_dtype: torch.dtype | None
 
     @classmethod
+    @timed("inference_engine_on_demand_prepare")
     def prepare(
         cls,
         X_train: np.ndarray,
@@ -188,6 +192,7 @@ class InferenceEngineOnDemand(InferenceEngine):
             save_peak_mem=save_peak_mem,
         )
 
+    @timed("inference_engine_on_demand_iter_outputs")
     @override
     def iter_outputs(
         self,
@@ -208,7 +213,8 @@ class InferenceEngineOnDemand(InferenceEngine):
             parallel_mode="as-ready",
         )
 
-        self.model = self.model.to(device)
+        with timer("model_to_device"):
+            self.model = self.model.to(device)
         if self.force_inference_dtype is not None:
             self.model = self.model.type(self.force_inference_dtype)
 
@@ -253,7 +259,8 @@ class InferenceEngineOnDemand(InferenceEngine):
 
             yield output, config
 
-        self.model = self.model.cpu()
+        with timer("model_to_cpu"):
+            self.model = self.model.cpu()
 
 
 @dataclass
@@ -281,6 +288,7 @@ class InferenceEngineBatchedNoPreprocessing(InferenceEngine):
     inference_mode: bool
 
     @classmethod
+    @timed("inference_engine_batched_no_preprocessing_prepare")
     def prepare(
         cls,
         X_trains: list[torch.Tensor],
@@ -320,6 +328,7 @@ class InferenceEngineBatchedNoPreprocessing(InferenceEngine):
             save_peak_mem=save_peak_mem,
         )
 
+    @timed("inference_engine_batched_no_preprocessing_iter_outputs")
     @override
     def iter_outputs(
         self,
@@ -328,7 +337,8 @@ class InferenceEngineBatchedNoPreprocessing(InferenceEngine):
         device: torch.device,
         autocast: bool,
     ) -> Iterator[tuple[torch.Tensor | dict, EnsembleConfig]]:
-        self.model = self.model.to(device)
+        with timer("model_to_device"):
+            self.model = self.model.to(device)
         ensemble_size = len(self.X_trains)
         for i in range(ensemble_size):
             single_eval_pos = self.X_trains[i].size(-2)  # End of train data
@@ -358,7 +368,8 @@ class InferenceEngineBatchedNoPreprocessing(InferenceEngine):
 
             yield output, self.ensemble_configs[i]
         if self.inference_mode:  ## if inference
-            self.model = self.model.cpu()
+            with timer("model_to_cpu"):
+                self.model = self.model.cpu()
 
     @override
     def use_torch_inference_mode(self, use_inference: bool):
@@ -389,6 +400,7 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
     no_preprocessing: bool = False
 
     @classmethod
+    @timed("inference_engine_cache_preprocessing_prepare")
     def prepare(  # noqa: PLR0913
         cls,
         X_train: np.ndarray | torch.Tensor,
@@ -450,6 +462,7 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
             no_preprocessing=no_preprocessing,
         )
 
+    @timed("inference_engine_cache_preprocessing_iter_outputs")
     @override
     def iter_outputs(
         self,
@@ -459,7 +472,8 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
         autocast: bool,
         only_return_standard_out: bool = True,
     ) -> Iterator[tuple[torch.Tensor | dict, EnsembleConfig]]:
-        self.model = self.model.to(device)
+        with timer("model_to_device"):
+            self.model = self.model.to(device)
         if self.force_inference_dtype is not None:
             self.model = self.model.type(self.force_inference_dtype)
         for preprocessor, X_train, y_train, config, cat_ix in zip(
@@ -520,7 +534,8 @@ class InferenceEngineCachePreprocessing(InferenceEngine):
 
             yield output, config
         if self.inference_mode:  ## if inference
-            self.model = self.model.cpu()
+            with timer("model_to_cpu"):
+                self.model = self.model.cpu()
 
     @override
     def use_torch_inference_mode(self, use_inference: bool):
@@ -545,6 +560,7 @@ class InferenceEngineCacheKV(InferenceEngine):
     force_inference_dtype: torch.dtype | None
 
     @classmethod
+    @timed("inference_engine_cache_kv_prepare")
     def prepare(  # noqa: PLR0913
         cls,
         X_train: np.ndarray,
@@ -601,7 +617,8 @@ class InferenceEngineCacheKV(InferenceEngine):
             n_train_samples.append(len(y))
 
             ens_model = deepcopy(model)
-            ens_model = ens_model.to(device)
+            with timer("model_to_device"):
+                ens_model = ens_model.to(device)
             if not isinstance(X, torch.Tensor):
                 X = torch.as_tensor(X, dtype=torch.float32, device=device)  # noqa: PLW2901
             X = X.unsqueeze(1)  # noqa: PLW2901
@@ -626,7 +643,8 @@ class InferenceEngineCacheKV(InferenceEngine):
                 )
 
             if device.type != "cpu":
-                ens_model = ens_model.cpu()
+                with timer("model_to_cpu"):
+                    ens_model = ens_model.cpu()
 
             models.append(ens_model)
 
@@ -641,6 +659,7 @@ class InferenceEngineCacheKV(InferenceEngine):
             save_peak_mem=save_peak_mem,
         )
 
+    @timed("inference_engine_cache_kv_iter_outputs")
     @override
     def iter_outputs(
         self,
@@ -673,7 +692,8 @@ class InferenceEngineCacheKV(InferenceEngine):
                 n_train_samples=X_train_len,
             )
 
-            model = model.to(device)  # noqa: PLW2901
+            with timer("model_to_device"):
+                model = model.to(device)  # noqa: PLW2901
             style = None
 
             if self.force_inference_dtype is not None:
@@ -693,7 +713,8 @@ class InferenceEngineCacheKV(InferenceEngine):
 
             # TODO(eddiebergman): This is not really what we want.
             # We'd rather just say unload from GPU, we already have it available on CPU.
-            model = model.cpu()  # noqa: PLW2901
+            with timer("model_to_cpu"):
+                model = model.cpu()  # noqa: PLW2901
 
             output = output if isinstance(output, dict) else output.squeeze(1)
 

@@ -1,0 +1,438 @@
+================================================================================
+FIT i=0
+Mean Squared Error (MSE): 3124.6174585131585
+Mean Absolute Error (MAE): 43.93618957310507
+R-squared (R^2): 0.406898792113625
+Quantile 0.25 MAE: 52.77746890342399
+Quantile 0.5 MAE: 44.692795270109826
+Quantile 0.75 MAE: 55.65695122496722
+Mode MAE: 54.42416517701867
+
+================================================================================
+FIT i=1
+Mean Squared Error (MSE): 2988.8056044697614
+Mean Absolute Error (MAE): 42.705647403246736
+R-squared (R^2): 0.4032140345408628
+Quantile 0.25 MAE: 49.90233332490268
+Quantile 0.5 MAE: 43.3515333933373
+Quantile 0.75 MAE: 55.70511580166752
+Mode MAE: 54.629115692556724
+
+================================================================================
+FIT i=2
+Mean Squared Error (MSE): 3105.1445992568943
+Mean Absolute Error (MAE): 45.56231229599208
+R-squared (R^2): 0.47266737559721084
+Quantile 0.25 MAE: 49.61829702821496
+Quantile 0.5 MAE: 45.47114045652625
+Quantile 0.75 MAE: 58.11725851607649
+Mode MAE: 51.3323398224295
+
+================================================================================
+FIT i=3
+Mean Squared Error (MSE): 3104.568087483514
+Mean Absolute Error (MAE): 43.74050464368846
+R-squared (R^2): 0.43281954141749546
+Quantile 0.25 MAE: 51.489847731916875
+Quantile 0.5 MAE: 44.036615554600544
+Quantile 0.75 MAE: 55.645791301988574
+Mode MAE: 51.68026999904685
+
+================================================================================
+FIT i=4
+Mean Squared Error (MSE): 2873.263321852714
+Mean Absolute Error (MAE): 43.21273119155675
+R-squared (R^2): 0.4969719918887642
+Quantile 0.25 MAE: 51.876190420699444
+Quantile 0.5 MAE: 43.47415182035263
+Quantile 0.75 MAE: 50.878419379665424
+Mode MAE: 48.67547960150732
+
+================================================================================
+FIT i=5
+Mean Squared Error (MSE): 3015.109233429337
+Mean Absolute Error (MAE): 45.05172024034474
+R-squared (R^2): 0.5270132726706502
+Quantile 0.25 MAE: 48.21906246551096
+Quantile 0.5 MAE: 44.57705988949292
+Quantile 0.75 MAE: 57.19482432326225
+Mode MAE: 46.99781600743124
+
+================================================================================
+FIT i=6
+Mean Squared Error (MSE): 2992.829334322229
+Mean Absolute Error (MAE): 42.812598502799254
+R-squared (R^2): 0.4627439731783707
+Quantile 0.25 MAE: 54.29657753199747
+Quantile 0.5 MAE: 43.830193349759874
+Quantile 0.75 MAE: 52.045302142835645
+Mode MAE: 52.58332192407895
+
+================================================================================
+FIT i=7
+Mean Squared Error (MSE): 2844.2500835216633
+Mean Absolute Error (MAE): 41.68307672788019
+R-squared (R^2): 0.5220886220798622
+Quantile 0.25 MAE: 51.238069586557884
+Quantile 0.5 MAE: 41.65961242048708
+Quantile 0.75 MAE: 54.14407803261117
+Mode MAE: 50.58713609878331
+
+================================================================================
+FIT i=8
+Mean Squared Error (MSE): 3063.5375794692545
+Mean Absolute Error (MAE): 44.80072773972603
+R-squared (R^2): 0.43892986681685997
+Quantile 0.25 MAE: 49.50378154075309
+Quantile 0.5 MAE: 45.02863677560467
+Quantile 0.75 MAE: 56.81441194717198
+Mode MAE: 53.98732647830493
+
+================================================================================
+FIT i=9
+Mean Squared Error (MSE): 2338.3235266850384
+Mean Absolute Error (MAE): 39.762648072961255
+R-squared (R^2): 0.5885508629457363
+Quantile 0.25 MAE: 47.42120732346626
+Quantile 0.5 MAE: 39.706856949688635
+Quantile 0.75 MAE: 50.52142856545644
+Mode MAE: 47.23711570321697
+
+================================================================================
+TIMING SUMMARY
+--------------------------------------------------------------------------------
+i=0 (10 iterations)
+  average: 1.7856 s ± 0.4723 s
+  fastest: 1.5933 s on iteration 6
+  slowest: 3.1962 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/fit (10 iterations)
+  average: 0.7584 s ± 0.4099 s
+  fastest: 0.5957 s on iteration 6
+  slowest: 1.9808 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/fit/regressor_fit (10 iterations)
+  average: 0.7584 s ± 0.4099 s
+  fastest: 0.5957 s on iteration 6
+  slowest: 1.9808 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/fit/regressor_fit/initialize_tabpfn_model (10 iterations)
+  average: 0.1225 s ± 0.0097 s
+  fastest: 0.1180 s on iteration 8
+  slowest: 0.1514 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/fit/regressor_fit/create_inference_engine (10 iterations)
+  average: 0.5941 s ± 0.3231 s
+  fastest: 0.4614 s on iteration 6
+  slowest: 1.5543 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/fit/regressor_fit/create_inference_engine/inference_engine_cache_kv_prepare (10 iterations)
+  average: 0.5941 s ± 0.3231 s
+  fastest: 0.4614 s on iteration 6
+  slowest: 1.5543 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/fit/regressor_fit/create_inference_engine/inference_engine_cache_kv_prepare/fit_preprocessing (10 iterations)
+  average: 0.0000 s ± 0.0000 s
+  fastest: 0.0000 s on iteration 6
+  slowest: 0.0000 s on iteration 2
+
+--------------------------------------------------------------------------------
+i=0/fit/regressor_fit/create_inference_engine/inference_engine_cache_kv_prepare/model_to_device (80 iterations)
+  average: 0.0008 s ± 0.0000 s
+  fastest: 0.0008 s on iteration 3
+  slowest: 0.0009 s on iteration 34
+
+--------------------------------------------------------------------------------
+i=0/fit/regressor_fit/create_inference_engine/inference_engine_cache_kv_prepare/transformer_forward (80 iterations)
+  average: 0.0317 s ± 0.0857 s
+  fastest: 0.0209 s on iteration 20
+  slowest: 0.7930 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/fit/regressor_fit/create_inference_engine/inference_engine_cache_kv_prepare/model_to_cpu (80 iterations)
+  average: 0.0105 s ± 0.0082 s
+  fastest: 0.0070 s on iteration 51
+  slowest: 0.0379 s on iteration 5
+
+--------------------------------------------------------------------------------
+i=0/predict_mean (10 iterations)
+  average: 0.3526 s ± 0.0536 s
+  fastest: 0.3316 s on iteration 6
+  slowest: 0.5133 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/predict_mean/regressor_forward (10 iterations)
+  average: 0.3301 s ± 0.0136 s
+  fastest: 0.3224 s on iteration 6
+  slowest: 0.3705 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/predict_mean/regressor_forward/inference_engine_cache_kv_iter_outputs (10 iterations)
+  average: 0.0000 s ± 0.0000 s
+  fastest: 0.0000 s on iteration 6
+  slowest: 0.0000 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/predict_mean/regressor_forward/model_to_device (80 iterations)
+  average: 0.0093 s ± 0.0006 s
+  fastest: 0.0085 s on iteration 11
+  slowest: 0.0104 s on iteration 15
+
+--------------------------------------------------------------------------------
+i=0/predict_mean/regressor_forward/transformer_forward (80 iterations)
+  average: 0.0175 s ± 0.0008 s
+  fastest: 0.0165 s on iteration 10
+  slowest: 0.0193 s on iteration 80
+
+--------------------------------------------------------------------------------
+i=0/predict_mean/regressor_forward/model_to_cpu (80 iterations)
+  average: 0.0082 s ± 0.0019 s
+  fastest: 0.0070 s on iteration 74
+  slowest: 0.0159 s on iteration 8
+
+--------------------------------------------------------------------------------
+i=0/predict_quantiles (10 iterations)
+  average: 0.3370 s ± 0.0081 s
+  fastest: 0.3314 s on iteration 10
+  slowest: 0.3602 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/predict_quantiles/regressor_forward (10 iterations)
+  average: 0.3278 s ± 0.0081 s
+  fastest: 0.3223 s on iteration 10
+  slowest: 0.3508 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/predict_quantiles/regressor_forward/inference_engine_cache_kv_iter_outputs (10 iterations)
+  average: 0.0000 s ± 0.0000 s
+  fastest: 0.0000 s on iteration 5
+  slowest: 0.0000 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/predict_quantiles/regressor_forward/model_to_device (80 iterations)
+  average: 0.0093 s ± 0.0006 s
+  fastest: 0.0085 s on iteration 43
+  slowest: 0.0105 s on iteration 71
+
+--------------------------------------------------------------------------------
+i=0/predict_quantiles/regressor_forward/transformer_forward (80 iterations)
+  average: 0.0174 s ± 0.0008 s
+  fastest: 0.0164 s on iteration 51
+  slowest: 0.0187 s on iteration 40
+
+--------------------------------------------------------------------------------
+i=0/predict_quantiles/regressor_forward/model_to_cpu (80 iterations)
+  average: 0.0080 s ± 0.0015 s
+  fastest: 0.0070 s on iteration 11
+  slowest: 0.0158 s on iteration 7
+
+--------------------------------------------------------------------------------
+i=0/predict_mode (10 iterations)
+  average: 0.3344 s ± 0.0027 s
+  fastest: 0.3308 s on iteration 10
+  slowest: 0.3385 s on iteration 1
+
+--------------------------------------------------------------------------------
+i=0/predict_mode/regressor_forward (10 iterations)
+  average: 0.3256 s ± 0.0024 s
+  fastest: 0.3224 s on iteration 10
+  slowest: 0.3288 s on iteration 9
+
+--------------------------------------------------------------------------------
+i=0/predict_mode/regressor_forward/inference_engine_cache_kv_iter_outputs (10 iterations)
+  average: 0.0000 s ± 0.0000 s
+  fastest: 0.0000 s on iteration 1
+  slowest: 0.0000 s on iteration 5
+
+--------------------------------------------------------------------------------
+i=0/predict_mode/regressor_forward/model_to_device (80 iterations)
+  average: 0.0093 s ± 0.0006 s
+  fastest: 0.0085 s on iteration 10
+  slowest: 0.0105 s on iteration 72
+
+--------------------------------------------------------------------------------
+i=0/predict_mode/regressor_forward/transformer_forward (80 iterations)
+  average: 0.0174 s ± 0.0008 s
+  fastest: 0.0165 s on iteration 12
+  slowest: 0.0187 s on iteration 70
+
+--------------------------------------------------------------------------------
+i=0/predict_mode/regressor_forward/model_to_cpu (80 iterations)
+  average: 0.0077 s ± 0.0006 s
+  fastest: 0.0070 s on iteration 75
+  slowest: 0.0085 s on iteration 7
+
+--------------------------------------------------------------------------------
+i>0 (90 iterations)
+  average: 1.6513 s ± 0.0536 s
+  fastest: 1.5990 s on iteration 69
+  slowest: 1.9280 s on iteration 1
+
+--------------------------------------------------------------------------------
+i>0/fit (90 iterations)
+  average: 0.6402 s ± 0.0534 s
+  fastest: 0.5949 s on iteration 15
+  slowest: 0.9310 s on iteration 1
+
+--------------------------------------------------------------------------------
+i>0/fit/regressor_fit (90 iterations)
+  average: 0.6402 s ± 0.0534 s
+  fastest: 0.5949 s on iteration 15
+  slowest: 0.9310 s on iteration 1
+
+--------------------------------------------------------------------------------
+i>0/fit/regressor_fit/initialize_tabpfn_model (90 iterations)
+  average: 0.1213 s ± 0.0120 s
+  fastest: 0.1168 s on iteration 43
+  slowest: 0.2299 s on iteration 41
+
+--------------------------------------------------------------------------------
+i>0/fit/regressor_fit/create_inference_engine (90 iterations)
+  average: 0.5006 s ± 0.0516 s
+  fastest: 0.4571 s on iteration 69
+  slowest: 0.7712 s on iteration 1
+
+--------------------------------------------------------------------------------
+i>0/fit/regressor_fit/create_inference_engine/inference_engine_cache_kv_prepare (90 iterations)
+  average: 0.5006 s ± 0.0516 s
+  fastest: 0.4571 s on iteration 69
+  slowest: 0.7712 s on iteration 1
+
+--------------------------------------------------------------------------------
+i>0/fit/regressor_fit/create_inference_engine/inference_engine_cache_kv_prepare/fit_preprocessing (90 iterations)
+  average: 0.0000 s ± 0.0000 s
+  fastest: 0.0000 s on iteration 24
+  slowest: 0.0000 s on iteration 74
+
+--------------------------------------------------------------------------------
+i>0/fit/regressor_fit/create_inference_engine/inference_engine_cache_kv_prepare/model_to_device (720 iterations)
+  average: 0.0008 s ± 0.0000 s
+  fastest: 0.0008 s on iteration 31
+  slowest: 0.0013 s on iteration 271
+
+--------------------------------------------------------------------------------
+i>0/fit/regressor_fit/create_inference_engine/inference_engine_cache_kv_prepare/transformer_forward (720 iterations)
+  average: 0.0220 s ± 0.0009 s
+  fastest: 0.0209 s on iteration 3
+  slowest: 0.0295 s on iteration 257
+
+--------------------------------------------------------------------------------
+i>0/fit/regressor_fit/create_inference_engine/inference_engine_cache_kv_prepare/model_to_cpu (720 iterations)
+  average: 0.0094 s ± 0.0059 s
+  fastest: 0.0068 s on iteration 364
+  slowest: 0.0373 s on iteration 6
+
+--------------------------------------------------------------------------------
+i>0/predict_mean (90 iterations)
+  average: 0.3377 s ± 0.0148 s
+  fastest: 0.3315 s on iteration 1
+  slowest: 0.4385 s on iteration 60
+
+--------------------------------------------------------------------------------
+i>0/predict_mean/regressor_forward (90 iterations)
+  average: 0.3282 s ± 0.0148 s
+  fastest: 0.3220 s on iteration 1
+  slowest: 0.4292 s on iteration 60
+
+--------------------------------------------------------------------------------
+i>0/predict_mean/regressor_forward/inference_engine_cache_kv_iter_outputs (90 iterations)
+  average: 0.0000 s ± 0.0000 s
+  fastest: 0.0000 s on iteration 72
+  slowest: 0.0000 s on iteration 6
+
+--------------------------------------------------------------------------------
+i>0/predict_mean/regressor_forward/model_to_device (720 iterations)
+  average: 0.0093 s ± 0.0006 s
+  fastest: 0.0084 s on iteration 2
+  slowest: 0.0113 s on iteration 312
+
+--------------------------------------------------------------------------------
+i>0/predict_mean/regressor_forward/transformer_forward (720 iterations)
+  average: 0.0177 s ± 0.0052 s
+  fastest: 0.0164 s on iteration 4
+  slowest: 0.1157 s on iteration 476
+
+--------------------------------------------------------------------------------
+i>0/predict_mean/regressor_forward/model_to_cpu (720 iterations)
+  average: 0.0078 s ± 0.0006 s
+  fastest: 0.0070 s on iteration 2
+  slowest: 0.0093 s on iteration 558
+
+--------------------------------------------------------------------------------
+i>0/predict_quantiles (90 iterations)
+  average: 0.3358 s ± 0.0026 s
+  fastest: 0.3318 s on iteration 2
+  slowest: 0.3440 s on iteration 12
+
+--------------------------------------------------------------------------------
+i>0/predict_quantiles/regressor_forward (90 iterations)
+  average: 0.3264 s ± 0.0026 s
+  fastest: 0.3226 s on iteration 28
+  slowest: 0.3343 s on iteration 12
+
+--------------------------------------------------------------------------------
+i>0/predict_quantiles/regressor_forward/inference_engine_cache_kv_iter_outputs (90 iterations)
+  average: 0.0000 s ± 0.0000 s
+  fastest: 0.0000 s on iteration 76
+  slowest: 0.0000 s on iteration 81
+
+--------------------------------------------------------------------------------
+i>0/predict_quantiles/regressor_forward/model_to_device (720 iterations)
+  average: 0.0094 s ± 0.0006 s
+  fastest: 0.0085 s on iteration 651
+  slowest: 0.0119 s on iteration 94
+
+--------------------------------------------------------------------------------
+i>0/predict_quantiles/regressor_forward/transformer_forward (720 iterations)
+  average: 0.0174 s ± 0.0008 s
+  fastest: 0.0164 s on iteration 2
+  slowest: 0.0200 s on iteration 28
+
+--------------------------------------------------------------------------------
+i>0/predict_quantiles/regressor_forward/model_to_cpu (720 iterations)
+  average: 0.0078 s ± 0.0006 s
+  fastest: 0.0070 s on iteration 114
+  slowest: 0.0106 s on iteration 96
+
+--------------------------------------------------------------------------------
+i>0/predict_mode (90 iterations)
+  average: 0.3344 s ± 0.0024 s
+  fastest: 0.3297 s on iteration 1
+  slowest: 0.3390 s on iteration 78
+
+--------------------------------------------------------------------------------
+i>0/predict_mode/regressor_forward (90 iterations)
+  average: 0.3259 s ± 0.0023 s
+  fastest: 0.3212 s on iteration 1
+  slowest: 0.3304 s on iteration 52
+
+--------------------------------------------------------------------------------
+i>0/predict_mode/regressor_forward/inference_engine_cache_kv_iter_outputs (90 iterations)
+  average: 0.0000 s ± 0.0000 s
+  fastest: 0.0000 s on iteration 4
+  slowest: 0.0000 s on iteration 36
+
+--------------------------------------------------------------------------------
+i>0/predict_mode/regressor_forward/model_to_device (720 iterations)
+  average: 0.0093 s ± 0.0006 s
+  fastest: 0.0085 s on iteration 610
+  slowest: 0.0116 s on iteration 512
+
+--------------------------------------------------------------------------------
+i>0/predict_mode/regressor_forward/transformer_forward (720 iterations)
+  average: 0.0174 s ± 0.0008 s
+  fastest: 0.0164 s on iteration 4
+  slowest: 0.0193 s on iteration 469
+
+--------------------------------------------------------------------------------
+i>0/predict_mode/regressor_forward/model_to_cpu (720 iterations)
+  average: 0.0077 s ± 0.0006 s
+  fastest: 0.0070 s on iteration 433
+  slowest: 0.0096 s on iteration 720
+

@@ -43,6 +43,9 @@ from tabpfn.utils import (
     update_encoder_params,
 )
 
+# --- Profiling imports ---
+from tabpfn.profiling import timed
+
 if TYPE_CHECKING:
     import numpy as np
     import pandas as pd
@@ -98,6 +101,7 @@ def initialize_tabpfn_model(
 ) -> ClassifierModelSpecs: ...
 
 
+@timed("initialize_tabpfn_model")
 def initialize_tabpfn_model(
     model_path: str
     | Path
@@ -211,6 +215,7 @@ def determine_precision(
     return use_autocast_, forced_inference_dtype_, byte_size
 
 
+@timed("create_inference_engine")
 def create_inference_engine(  # noqa: PLR0913
     *,
     X_train: np.ndarray,

@@ -22,6 +22,9 @@ from tabpfn.model.encoders import (
 )
 from tabpfn.model.layer import PerFeatureEncoderLayer
 
+# --- Profiling imports ---
+from tabpfn.profiling import timed
+
 if TYPE_CHECKING:
     from tabpfn.model.config import ModelConfig
 
@@ -312,6 +315,7 @@ class PerFeatureTransformer(nn.Module):
     # such as forward, forward_with_test, forward_with_style?
     # The documentation generator complains about this function because we are
     # documenting parameters that don't exist in the signature
+    @timed("transformer_forward")
     def forward(self, *args: Any, **kwargs: Any) -> dict[str, torch.Tensor]:  # noqa: D417
         """Performs a forward pass through the model.
 

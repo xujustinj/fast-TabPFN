@@ -69,6 +69,9 @@ from tabpfn.utils import (
     validate_Xy_fit,
 )
 
+# --- Profiling imports ---
+from tabpfn.profiling import timed
+
 if TYPE_CHECKING:
     import numpy.typing as npt
     from sklearn.compose import ColumnTransformer
@@ -423,6 +426,7 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
         tags.estimator_type = "regressor"
         return tags
 
+    @timed("regressor_get_preprocessed_datasets")
     def get_preprocessed_datasets(
         self,
         X_raw: XType | list[XType],
@@ -555,6 +559,7 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
 
         return ensemble_configs, X, y, self.bardist_
 
+    @timed("regressor_fit_from_preprocessed")
     def fit_from_preprocessed(
         self,
         X_preprocessed: list[torch.Tensor],
@@ -618,6 +623,7 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
 
         return self
 
+    @timed("regressor_fit")
     @config_context(transform_output="default")  # type: ignore
     def fit(self, X: XType, y: YType) -> Self:
         """Fit the model.
@@ -851,6 +857,7 @@ class TabPFNRegressor(RegressorMixin, BaseEstimator):
 
         return logit_to_output(output_type=output_type)
 
+    @timed("regressor_forward")
     def forward(
         self,
         X: list[torch.Tensor] | XType,

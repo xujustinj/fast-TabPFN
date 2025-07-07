@@ -38,6 +38,9 @@ from tabpfn.model.preprocessing import (
 )
 from tabpfn.utils import infer_random_state
 
+# --- Profiling imports ---
+from tabpfn.profiling import timed
+
 if TYPE_CHECKING:
     import numpy.typing as npt
     from sklearn.base import TransformerMixin
@@ -648,6 +651,7 @@ def transform_labels_one(config, y_train):
     return y_train
 
 
+@timed("fit_preprocessing")
 def fit_preprocessing(
     configs: Sequence[EnsembleConfig],
     X_train: np.ndarray,
