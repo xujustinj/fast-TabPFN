@@ -21,7 +21,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # Initialize a regressor
-reg = TabPFNRegressor()
+reg = TabPFNRegressor(n_estimators=1)
 reg.fit(X_train, y_train)
 
 # Predict a point estimate (using the mean)

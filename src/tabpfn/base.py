@@ -164,7 +164,7 @@ def create_inference_engine(  # noqa: PLR0913
     fit_mode: Literal["low_memory", "fit_preprocessors", "fit_with_cache"],
     device_: torch.device,
     rng: np.random.Generator,
-    n_jobs: int,
+    n_jobs: int = -1,
     byte_size: int,
     forced_inference_dtype_: torch.dtype | None,
     memory_saving_mode: bool | Literal["auto"] | float | int,

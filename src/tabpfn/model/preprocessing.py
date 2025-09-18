@@ -7,9 +7,9 @@ import hashlib
 import warnings
 from abc import abstractmethod
 from collections import UserList
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Literal, NamedTuple, TypeVar
 from typing_extensions import Self, override
 
 import numpy as np
@@ -164,23 +164,24 @@ ALPHAS = (
 )
 
 
-def get_all_kdi_transformers() -> dict[str, KDITransformerWithNaN]:
+def get_kdi_factory(
+    alpha: float, output_distribution: Literal["normal", "uniform"]
+) -> Callable[[], KDITransformerWithNaN]:
+    return lambda: KDITransformerWithNaN(
+        alpha=alpha, output_distribution=output_distribution
+    )
+
+
+def get_all_kdi_transformers() -> Mapping[str, Callable[[], KDITransformerWithNaN]]:
     try:
-        all_preprocessors = {
-            "kdi": KDITransformerWithNaN(alpha=1.0, output_distribution="normal"),
-            "kdi_uni": KDITransformerWithNaN(
-                alpha=1.0,
-                output_distribution="uniform",
-            ),
+        all_preprocessors: dict[str, Callable[[], KDITransformerWithNaN]] = {
+            "kdi": get_kdi_factory(1.0, "normal"),
+            "kdi_uni": get_kdi_factory(1.0, "uniform"),
         }
         for alpha in ALPHAS:
-            all_preprocessors[f"kdi_alpha_{alpha}"] = KDITransformerWithNaN(
-                alpha=alpha,
-                output_distribution="normal",
-            )
-            all_preprocessors[f"kdi_alpha_{alpha}_uni"] = KDITransformerWithNaN(
-                alpha=alpha,
-                output_distribution="uniform",
+            all_preprocessors[f"kdi_alpha_{alpha}"] = get_kdi_factory(alpha, "normal")
+            all_preprocessors[f"kdi_alpha_{alpha}_uni"] = get_kdi_factory(
+                alpha, "uniform"
             )
         return all_preprocessors
     except Exception:  # noqa: BLE001
@@ -676,7 +677,7 @@ class ReshapeFeatureDistributionsStep(FeaturePreprocessingTransformerStep):
     def get_adaptive_preprocessors(
         num_examples: int = 100,
         random_state: int | None = None,
-    ) -> dict[str, ColumnTransformer]:
+    ) -> Mapping[str, Callable[[], ColumnTransformer]]:
         """Returns a dictionary of adaptive column transformers that can be used to
         preprocess the data. Adaptive column transformers are used to preprocess the
         data based on the column type, they receive a pandas dataframe with column
@@ -688,7 +689,7 @@ class ReshapeFeatureDistributionsStep(FeaturePreprocessingTransformerStep):
             random_state: The random state to use for the transformers.
         """
         return {
-            "adaptive": ColumnTransformer(
+            "adaptive": lambda: ColumnTransformer(
                 [
                     (
                         "skewed_pos_1_0",
@@ -751,76 +752,76 @@ class ReshapeFeatureDistributionsStep(FeaturePreprocessingTransformerStep):
     def get_all_preprocessors(
         num_examples: int,
         random_state: int | None = None,
-    ) -> dict[str, TransformerMixin | Pipeline]:
-        all_preprocessors = {
-            "power": add_safe_standard_to_safe_power_without_standard(
+    ) -> Mapping[str, Callable[[], TransformerMixin | Pipeline]]:
+        all_preprocessors: dict[str, Callable[[], TransformerMixin | Pipeline]] = {
+            "power": lambda: add_safe_standard_to_safe_power_without_standard(
                 PowerTransformer(standardize=False),
             ),
-            "safepower": add_safe_standard_to_safe_power_without_standard(
+            "safepower": lambda: add_safe_standard_to_safe_power_without_standard(
                 SafePowerTransformer(standardize=False),
             ),
-            "power_box": make_box_cox_safe(
+            "power_box": lambda: make_box_cox_safe(
                 add_safe_standard_to_safe_power_without_standard(
                     PowerTransformer(standardize=False, method="box-cox"),
                 ),
             ),
-            "safepower_box": make_box_cox_safe(
+            "safepower_box": lambda: make_box_cox_safe(
                 add_safe_standard_to_safe_power_without_standard(
                     SafePowerTransformer(standardize=False, method="box-cox"),
                 ),
             ),
-            "log": FunctionTransformer(
+            "log": lambda: FunctionTransformer(
                 func=np.log,
                 inverse_func=np.exp,
                 check_inverse=False,
             ),
-            "1_plus_log": FunctionTransformer(
+            "1_plus_log": lambda: FunctionTransformer(
                 func=np.log1p,
                 inverse_func=_exp_minus_1,
                 check_inverse=False,
             ),
-            "exp": FunctionTransformer(
+            "exp": lambda: FunctionTransformer(
                 func=np.exp,
                 inverse_func=np.log,
                 check_inverse=False,
             ),
-            "quantile_uni_coarse": QuantileTransformer(
+            "quantile_uni_coarse": lambda: QuantileTransformer(
                 output_distribution="uniform",
                 n_quantiles=max(num_examples // 10, 2),
                 random_state=random_state,
             ),
-            "quantile_norm_coarse": QuantileTransformer(
+            "quantile_norm_coarse": lambda: QuantileTransformer(
                 output_distribution="normal",
                 n_quantiles=max(num_examples // 10, 2),
                 random_state=random_state,
             ),
-            "quantile_uni": QuantileTransformer(
+            "quantile_uni": lambda: QuantileTransformer(
                 output_distribution="uniform",
                 n_quantiles=max(num_examples // 5, 2),
                 random_state=random_state,
             ),
-            "quantile_norm": QuantileTransformer(
+            "quantile_norm": lambda: QuantileTransformer(
                 output_distribution="normal",
                 n_quantiles=max(num_examples // 5, 2),
                 random_state=random_state,
             ),
-            "quantile_uni_fine": QuantileTransformer(
+            "quantile_uni_fine": lambda: QuantileTransformer(
                 output_distribution="uniform",
                 n_quantiles=num_examples,
                 random_state=random_state,
             ),
-            "quantile_norm_fine": QuantileTransformer(
+            "quantile_norm_fine": lambda: QuantileTransformer(
                 output_distribution="normal",
                 n_quantiles=num_examples,
                 random_state=random_state,
             ),
-            "robust": RobustScaler(unit_variance=True),
-            "none": FunctionTransformer(_identity),
+            "robust": lambda: RobustScaler(unit_variance=True),
+            "none": lambda: FunctionTransformer(_identity),
             **get_all_kdi_transformers(),
         }
 
         with contextlib.suppress(Exception):
-            all_preprocessors["norm_and_kdi"] = FeatureUnion(
+            all_preprocessors["norm_and_kdi"] = lambda: FeatureUnion(
                 [
                     (
                         "norm",
@@ -993,13 +994,14 @@ class ReshapeFeatureDistributionsStep(FeaturePreprocessingTransformerStep):
 
         # NOTE: No need to keep track of categoricals here, already done above
         if self.transform_name != "per_feature":
-            _transformer = all_preprocessors[self.transform_name]
-            transformers.append(("feat_transform", _transformer, trans_ixs))
+            factory = all_preprocessors[self.transform_name]
+            transformers.append(("feat_transform", factory(), trans_ixs))
         else:
             preprocessors = list(all_preprocessors.values())
+            factory = rng.choice(preprocessors)
             transformers.extend(
                 [
-                    (f"transformer_{i}", rng.choice(preprocessors), [i])  # type: ignore
+                    (f"transformer_{i}", factory(), [i])  # type: ignore
                     for i in trans_ixs
                 ],
             )
